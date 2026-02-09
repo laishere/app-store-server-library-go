@@ -63,7 +63,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	// Validate headers
-	if !strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library-go") {
+	if !strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library/go") {
 		m.t.Errorf("Invalid User-Agent: %s", req.Header.Get("User-Agent"))
 	}
 	if req.Header.Get("Accept") != "application/json" {
