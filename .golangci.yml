@@ -1,0 +1,33 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - revive
+    - gocritic
+    - misspell
+    - unused
+    - bodyclose
+
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+          arguments:
+            - "disable-checks-on-constants"
+        - name: context-as-argument
+        - name: empty-block
+        - name: unexported-return
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
