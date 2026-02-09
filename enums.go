@@ -12,6 +12,16 @@ const (
 	ENVIRONMENT_LOCAL_TESTING Environment = "LocalTesting" // Used for unit testing
 )
 
+// Values returns all valid values for Environment.
+func (e Environment) Values() []Environment {
+	return []Environment{
+		ENVIRONMENT_PRODUCTION,
+		ENVIRONMENT_SANDBOX,
+		ENVIRONMENT_XCODE,
+		ENVIRONMENT_LOCAL_TESTING,
+	}
+}
+
 // InAppOwnershipType is the relationship of the user with the family-shared purchase to which they have access.
 //
 // https://developer.apple.com/documentation/appstoreserverapi/inappownershiptype
@@ -21,6 +31,14 @@ const (
 	IN_APP_OWNERSHIP_TYPE_FAMILY_SHARED InAppOwnershipType = "FAMILY_SHARED"
 	IN_APP_OWNERSHIP_TYPE_PURCHASED     InAppOwnershipType = "PURCHASED"
 )
+
+// Values returns all valid values for InAppOwnershipType.
+func (i InAppOwnershipType) Values() []InAppOwnershipType {
+	return []InAppOwnershipType{
+		IN_APP_OWNERSHIP_TYPE_FAMILY_SHARED,
+		IN_APP_OWNERSHIP_TYPE_PURCHASED,
+	}
+}
 
 // OfferType is the type of offer.
 //
@@ -59,6 +77,16 @@ const (
 	TYPE_NON_RENEWING_SUBSCRIPTION   Type = "Non-Renewing Subscription"
 )
 
+// Values returns all valid values for Type.
+func (t Type) Values() []Type {
+	return []Type{
+		TYPE_AUTO_RENEWABLE_SUBSCRIPTION,
+		TYPE_NON_CONSUMABLE,
+		TYPE_CONSUMABLE,
+		TYPE_NON_RENEWING_SUBSCRIPTION,
+	}
+}
+
 // PurchasePlatform is the platform on which the customer originally purchased the app.
 //
 // https://developer.apple.com/documentation/storekit/apptransaction/originalplatform
@@ -70,6 +98,16 @@ const (
 	PURCHASE_PLATFORM_TVOS     PurchasePlatform = "tvOS"
 	PURCHASE_PLATFORM_VISIONOS PurchasePlatform = "visionOS"
 )
+
+// Values returns all valid values for PurchasePlatform.
+func (p PurchasePlatform) Values() []PurchasePlatform {
+	return []PurchasePlatform{
+		PURCHASE_PLATFORM_MACOS,
+		PURCHASE_PLATFORM_IOS,
+		PURCHASE_PLATFORM_TVOS,
+		PURCHASE_PLATFORM_VISIONOS,
+	}
+}
 
 // NotificationTypeV2 is the type that describes the in-app purchase or external purchase event for which the App Store sends the version 2 notification.
 //
@@ -99,6 +137,32 @@ const (
 	NOTIFICATION_TYPE_RESCIND_CONSENT                      NotificationTypeV2 = "RESCIND_CONSENT"
 )
 
+// Values returns all valid values for NotificationTypeV2.
+func (n NotificationTypeV2) Values() []NotificationTypeV2 {
+	return []NotificationTypeV2{
+		NOTIFICATION_TYPE_SUBSCRIBED,
+		NOTIFICATION_TYPE_DID_CHANGE_RENEWAL_PREF,
+		NOTIFICATION_TYPE_DID_CHANGE_RENEWAL_STATUS,
+		NOTIFICATION_TYPE_OFFER_REDEEMED,
+		NOTIFICATION_TYPE_DID_RENEW,
+		NOTIFICATION_TYPE_EXPIRED,
+		NOTIFICATION_TYPE_DID_FAIL_TO_RENEW,
+		NOTIFICATION_TYPE_GRACE_PERIOD_EXPIRED,
+		NOTIFICATION_TYPE_PRICE_INCREASE,
+		NOTIFICATION_TYPE_REFUND,
+		NOTIFICATION_TYPE_REFUND_DECLINED,
+		NOTIFICATION_TYPE_CONSUMPTION_REQUEST,
+		NOTIFICATION_TYPE_RENEWAL_EXTENDED,
+		NOTIFICATION_TYPE_REVOKE,
+		NOTIFICATION_TYPE_TEST,
+		NOTIFICATION_TYPE_RENEWAL_EXTENSION,
+		NOTIFICATION_TYPE_REFUND_REVERSED,
+		NOTIFICATION_TYPE_EXTERNAL_PURCHASE_TOKEN_NOTIFICATION,
+		NOTIFICATION_TYPE_ONE_TIME_CHARGE,
+		NOTIFICATION_TYPE_RESCIND_CONSENT,
+	}
+}
+
 // Subtype is a string that provides details about select notification types in version 2.
 //
 // https://developer.apple.com/documentation/appstoreservernotifications/subtype
@@ -123,6 +187,29 @@ const (
 	SUBTYPE_FAILURE              Subtype = "FAILURE"
 	SUBTYPE_UNREPORTED           Subtype = "UNREPORTED"
 )
+
+// Values returns all valid values for Subtype.
+func (s Subtype) Values() []Subtype {
+	return []Subtype{
+		SUBTYPE_INITIAL_BUY,
+		SUBTYPE_RESUBSCRIBE,
+		SUBTYPE_DOWNGRADE,
+		SUBTYPE_UPGRADE,
+		SUBTYPE_AUTO_RENEW_ENABLED,
+		SUBTYPE_AUTO_RENEW_DISABLED,
+		SUBTYPE_VOLUNTARY,
+		SUBTYPE_BILLING_RETRY,
+		SUBTYPE_PRICE_INCREASE,
+		SUBTYPE_GRACE_PERIOD,
+		SUBTYPE_PENDING,
+		SUBTYPE_ACCEPTED,
+		SUBTYPE_BILLING_RECOVERY,
+		SUBTYPE_PRODUCT_NOT_FOR_SALE,
+		SUBTYPE_SUMMARY,
+		SUBTYPE_FAILURE,
+		SUBTYPE_UNREPORTED,
+	}
+}
 
 // ExpirationIntent is the reason an auto-renewable subscription expired.
 //
@@ -222,6 +309,23 @@ const (
 	OTHER                           SendAttemptResult = "OTHER"
 )
 
+// Values returns all valid values for SendAttemptResult.
+func (s SendAttemptResult) Values() []SendAttemptResult {
+	return []SendAttemptResult{
+		SUCCESS,
+		TIMED_OUT,
+		TLS_ISSUE,
+		CIRCULAR_REDIRECT,
+		NO_RESPONSE,
+		SOCKET_ISSUE,
+		UNSUPPORTED_CHARSET,
+		INVALID_RESPONSE,
+		PREMATURE_CLOSE,
+		UNSUCCESSFUL_HTTP_RESPONSE_CODE,
+		OTHER,
+	}
+}
+
 // ImageState is the approval state of an image.
 //
 // https://developer.apple.com/documentation/retentionmessaging/imagestate
@@ -232,6 +336,15 @@ const (
 	IMAGE_APPROVED ImageState = "APPROVED"
 	IMAGE_REJECTED ImageState = "REJECTED"
 )
+
+// Values returns all valid values for ImageState.
+func (i ImageState) Values() []ImageState {
+	return []ImageState{
+		IMAGE_PENDING,
+		IMAGE_APPROVED,
+		IMAGE_REJECTED,
+	}
+}
 
 // MessageState is the approval state of the message.
 //
@@ -244,6 +357,15 @@ const (
 	MESSAGE_REJECTED MessageState = "REJECTED"
 )
 
+// Values returns all valid values for MessageState.
+func (m MessageState) Values() []MessageState {
+	return []MessageState{
+		MESSAGE_PENDING,
+		MESSAGE_APPROVED,
+		MESSAGE_REJECTED,
+	}
+}
+
 // OfferDiscountType is the payment mode for a discount offer on an In-App Purchase.
 //
 // https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype
@@ -255,6 +377,16 @@ const (
 	OFFER_DISCOUNT_TYPE_PAY_UP_FRONT  OfferDiscountType = "PAY_UP_FRONT"
 	OFFER_DISCOUNT_TYPE_ONE_TIME      OfferDiscountType = "ONE_TIME"
 )
+
+// Values returns all valid values for OfferDiscountType.
+func (o OfferDiscountType) Values() []OfferDiscountType {
+	return []OfferDiscountType{
+		OFFER_DISCOUNT_TYPE_FREE_TRIAL,
+		OFFER_DISCOUNT_TYPE_PAY_AS_YOU_GO,
+		OFFER_DISCOUNT_TYPE_PAY_UP_FRONT,
+		OFFER_DISCOUNT_TYPE_ONE_TIME,
+	}
+}
 
 // RevocationReason is the reason for a refunded transaction.
 //
@@ -277,6 +409,15 @@ const (
 	REVOCATION_TYPE_FAMILY_REVOKE   RevocationType = "FAMILY_REVOKE"
 )
 
+// Values returns all valid values for RevocationType.
+func (r RevocationType) Values() []RevocationType {
+	return []RevocationType{
+		REVOCATION_TYPE_REFUND_FULL,
+		REVOCATION_TYPE_REFUND_PRORATED,
+		REVOCATION_TYPE_FAMILY_REVOKE,
+	}
+}
+
 // TransactionReason is the cause of a purchase transaction, which indicates whether it’s a customer’s purchase or a renewal for an auto-renewable subscription that the system initiates.
 //
 // https://developer.apple.com/documentation/appstoreserverapi/transactionreason
@@ -286,6 +427,14 @@ const (
 	TRANSACTION_REASON_PURCHASE TransactionReason = "PURCHASE"
 	TRANSACTION_REASON_RENEWAL  TransactionReason = "RENEWAL"
 )
+
+// Values returns all valid values for TransactionReason.
+func (t TransactionReason) Values() []TransactionReason {
+	return []TransactionReason{
+		TRANSACTION_REASON_PURCHASE,
+		TRANSACTION_REASON_RENEWAL,
+	}
+}
 
 // ConsumptionRequestReason is the reason the customer requested the refund.
 //
@@ -299,6 +448,17 @@ const (
 	CONSUMPTION_REQUEST_REASON_LEGAL_REASON              ConsumptionRequestReason = "LEGAL_REASON"
 	CONSUMPTION_REQUEST_REASON_OTHER                     ConsumptionRequestReason = "OTHER"
 )
+
+// Values returns all valid values for ConsumptionRequestReason.
+func (c ConsumptionRequestReason) Values() []ConsumptionRequestReason {
+	return []ConsumptionRequestReason{
+		CONSUMPTION_REQUEST_REASON_UNINTENDED_PURCHASE,
+		CONSUMPTION_REQUEST_REASON_FULFILLMENT_ISSUE,
+		CONSUMPTION_REQUEST_REASON_UNSATISFIED_WITH_PURCHASE,
+		CONSUMPTION_REQUEST_REASON_LEGAL_REASON,
+		CONSUMPTION_REQUEST_REASON_OTHER,
+	}
+}
 
 // GetTransactionHistoryVersion is the version of the Get Transaction History endpoint.
 type GetTransactionHistoryVersion string

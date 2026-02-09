@@ -468,10 +468,7 @@ func TestGetTransactionHistoryV1(t *testing.T) {
 	assertEqual(t, true, response.HasMore, "HasMore")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
 	assertEqual(t, int64(323232), response.AppAppleId, "AppAppleId")
-	if response.Environment == nil {
-		t.Fatal("Environment is nil")
-	}
-	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, *response.Environment, "Environment")
+	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
 }
 
 // Test GetTransactionHistoryV2
@@ -521,10 +518,7 @@ func TestGetTransactionHistoryV2(t *testing.T) {
 	assertEqual(t, true, response.HasMore, "HasMore")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
 	assertEqual(t, int64(323232), response.AppAppleId, "AppAppleId")
-	if response.Environment == nil {
-		t.Fatal("Environment is nil")
-	}
-	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, *response.Environment, "Environment")
+	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
 }
 
 // Test GetTransactionInfo
@@ -571,9 +565,7 @@ func TestGetTransactionHistoryWithUnknownEnvironment(t *testing.T) {
 		t.Fatal("Response should not be nil")
 	}
 
-	if response.Environment != nil {
-		t.Errorf("Expected nil Environment, got %v", *response.Environment)
-	}
+	assertEqual(t, Environment(""), response.Environment, "Environment")
 	assertEqual(t, "LocalTestingxxx", response.RawEnvironment, "RawEnvironment")
 }
 

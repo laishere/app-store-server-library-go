@@ -1,5 +1,7 @@
 package internal
 
+import "slices"
+
 // ParseTimestamp handles both integer and floating point timestamps
 func ParseTimestamp(v any) int64 {
 	switch val := v.(type) {
@@ -13,13 +15,18 @@ func ParseTimestamp(v any) int64 {
 }
 
 // UnmarshalStringEnum unmarshals a string value into an enum type and its raw string representation.
-func UnmarshalStringEnum[T ~string](data any, enum *T, raw *string) {
+func UnmarshalStringEnum[T ~string](data any, enum *T, raw *string, validValues []T) {
 	if data == nil {
 		return
 	}
 	if v, ok := data.(string); ok {
 		*raw = v
-		*enum = T(v)
+		val := T(v)
+		if slices.Contains(validValues, val) {
+			*enum = val
+			return
+		}
+		*enum = ""
 	}
 }
 

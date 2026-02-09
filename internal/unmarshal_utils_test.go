@@ -20,17 +20,26 @@ func TestUnmarshalStringEnum(t *testing.T) {
 	type MyEnum string
 	var enum MyEnum
 	var raw string
+	validValues := []MyEnum{"VALUE"}
 
 	// Test valid string
-	UnmarshalStringEnum("VALUE", &enum, &raw)
+	UnmarshalStringEnum("VALUE", &enum, &raw, validValues)
 	if enum != "VALUE" || raw != "VALUE" {
 		t.Errorf("Expected VALUE, got enum=%v, raw=%v", enum, raw)
+	}
+
+	// Test invalid string
+	enum = ""
+	raw = ""
+	UnmarshalStringEnum("INVALID", &enum, &raw, validValues)
+	if enum != "" || raw != "INVALID" {
+		t.Errorf("Expected empty enum and raw INVALID, got enum=%v, raw=%v", enum, raw)
 	}
 
 	// Test nil
 	enum = ""
 	raw = ""
-	UnmarshalStringEnum(nil, &enum, &raw)
+	UnmarshalStringEnum(nil, &enum, &raw, validValues)
 	if enum != "" || raw != "" {
 		t.Errorf("Expected empty, got enum=%v, raw=%v", enum, raw)
 	}
@@ -38,7 +47,7 @@ func TestUnmarshalStringEnum(t *testing.T) {
 	// Test invalid type
 	enum = ""
 	raw = ""
-	UnmarshalStringEnum(123, &enum, &raw)
+	UnmarshalStringEnum(123, &enum, &raw, validValues)
 	if enum != "" || raw != "" {
 		t.Errorf("Expected empty for invalid type, got enum=%v, raw=%v", enum, raw)
 	}

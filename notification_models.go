@@ -65,7 +65,204 @@ type ResponseBodyV2DecodedPayload struct {
 	AppData *AppData `json:"appData,omitempty"`
 }
 
-// UnmarshalJSON custom unmarshaler for ResponseBodyV2DecodedPayload
+// Data is the app metadata and the signed renewal and transaction information.
+//
+// https://developer.apple.com/documentation/appstoreservernotifications/data
+type Data struct {
+	// The server environment that the notification applies to, either sandbox or production.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/environment
+	Environment Environment `json:"environment,omitempty"`
+
+	// See environment
+	RawEnvironment string `json:"rawEnvironment,omitempty"`
+
+	// The unique identifier of an app in the App Store.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/appappleid
+	AppAppleId int64 `json:"appAppleId,omitempty"`
+
+	// The bundle identifier of an app.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/bundleid
+	BundleId string `json:"bundleId,omitempty"`
+
+	// The version of the build that identifies an iteration of the bundle.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/bundleversion
+	BundleVersion string `json:"bundleVersion,omitempty"`
+
+	// Transaction information signed by the App Store, in JSON Web Signature (JWS) format.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/jwstransaction
+	SignedTransactionInfo string `json:"signedTransactionInfo,omitempty"`
+
+	// Subscription renewal information, signed by the App Store, in JSON Web Signature (JWS) format.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo
+	SignedRenewalInfo string `json:"signedRenewalInfo,omitempty"`
+
+	// The status of an auto-renewable subscription as of the signedDate in the responseBodyV2DecodedPayload.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/status
+	Status Status `json:"status,omitempty"`
+
+	// See status
+	RawStatus int32 `json:"rawStatus,omitempty"`
+
+	// The reason the customer requested the refund.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason
+	ConsumptionRequestReason ConsumptionRequestReason `json:"consumptionRequestReason,omitempty"`
+
+	// See consumptionRequestReason
+	RawConsumptionRequestReason string `json:"rawConsumptionRequestReason,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (d *Data) UnmarshalJSON(data []byte) error {
+	type Alias Data
+	aux := &struct {
+		Environment              any `json:"environment"`
+		Status                   any `json:"status"`
+		ConsumptionRequestReason any `json:"consumptionRequestReason"`
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	internal.UnmarshalStringEnum(aux.Environment, &d.Environment, &d.RawEnvironment, d.Environment.Values())
+	internal.UnmarshalIntEnum(aux.Status, &d.Status, &d.RawStatus)
+	internal.UnmarshalStringEnum(aux.ConsumptionRequestReason, &d.ConsumptionRequestReason, &d.RawConsumptionRequestReason, d.ConsumptionRequestReason.Values())
+
+	return nil
+}
+
+// Summary is the payload data for a subscription-renewal-date extension notification.
+//
+// https://developer.apple.com/documentation/appstoreservernotifications/summary
+type Summary struct {
+	// The server environment that the notification applies to, either sandbox or production.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/environment
+	Environment Environment `json:"environment,omitempty"`
+
+	// See environment
+	RawEnvironment string `json:"rawEnvironment,omitempty"`
+
+	// The unique identifier of an app in the App Store.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/appappleid
+	AppAppleId int64 `json:"appAppleId,omitempty"`
+
+	// The bundle identifier of an app.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/bundleid
+	BundleId string `json:"bundleId,omitempty"`
+
+	// The unique identifier for the product, that you create in App Store Connect.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/productid
+	ProductId string `json:"productId,omitempty"`
+
+	// A string that contains a unique identifier you provide to track each subscription-renewal-date extension request.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/requestidentifier
+	RequestIdentifier string `json:"requestIdentifier,omitempty"`
+
+	// A list of storefront country codes you provide to limit the storefronts for a subscription-renewal-date extension.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/storefrontcountrycodes
+	StorefrontCountryCodes []string `json:"storefrontCountryCodes,omitempty"`
+
+	// The count of subscriptions that successfully receive a subscription-renewal-date extension.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/succeededcount
+	SucceededCount int64 `json:"succeededCount,omitempty"`
+
+	// The count of subscriptions that fail to receive a subscription-renewal-date extension.
+	//
+	// https://developer.apple.com/documentation/appstoreserverapi/failedcount
+	FailedCount int64 `json:"failedCount,omitempty"`
+}
+
+// ExternalPurchaseToken is the payload data that contains an external purchase token.
+//
+// https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken
+type ExternalPurchaseToken struct {
+	// The field of an external purchase token that uniquely identifies the token.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/externalpurchaseid
+	ExternalPurchaseId string `json:"externalPurchaseId,omitempty"`
+
+	// The field of an external purchase token that contains the UNIX date, in milliseconds, when the system created the token.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/tokencreationdate
+	TokenCreationDate int64 `json:"tokenCreationDate,omitempty"`
+
+	// The unique identifier of an app in the App Store.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/appappleid
+	AppAppleId int64 `json:"appAppleId,omitempty"`
+
+	// The bundle identifier of an app.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/bundleid
+	BundleId string `json:"bundleId,omitempty"`
+}
+
+// AppData is the object that contains the app metadata and signed app transaction information.
+//
+// https://developer.apple.com/documentation/appstoreservernotifications/appdata
+type AppData struct {
+	// The unique identifier of the app that the notification applies to.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/appappleid
+	AppAppleId int64 `json:"appAppleId,omitempty"`
+
+	// The bundle identifier of the app.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/bundleid
+	BundleId string `json:"bundleId,omitempty"`
+
+	// The server environment that the notification applies to, either sandbox or production.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/environment
+	Environment Environment `json:"environment,omitempty"`
+
+	// See environment
+	RawEnvironment string `json:"rawEnvironment,omitempty"`
+
+	// App transaction information signed by the App Store, in JSON Web Signature (JWS) format.
+	//
+	// https://developer.apple.com/documentation/appstoreservernotifications/jwsapptransaction
+	SignedAppTransactionInfo string `json:"signedAppTransactionInfo,omitempty"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (a *AppData) UnmarshalJSON(data []byte) error {
+	type Alias AppData
+	aux := &struct {
+		Environment any `json:"environment"`
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	internal.UnmarshalStringEnum(aux.Environment, &a.Environment, &a.RawEnvironment, a.Environment.Values())
+
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
 func (t *ResponseBodyV2DecodedPayload) UnmarshalJSON(data []byte) error {
 	type Alias ResponseBodyV2DecodedPayload
 	aux := &struct {
@@ -81,81 +278,9 @@ func (t *ResponseBodyV2DecodedPayload) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Handle NotificationType
-	internal.UnmarshalStringEnum(aux.NotificationType, &t.NotificationType, &t.RawNotificationType)
-
-	// Handle Subtype
-	internal.UnmarshalStringEnum(aux.Subtype, &t.Subtype, &t.RawSubtype)
-
-	// Handle floating point timestamps
+	internal.UnmarshalStringEnum(aux.NotificationType, &t.NotificationType, &t.RawNotificationType, t.NotificationType.Values())
+	internal.UnmarshalStringEnum(aux.Subtype, &t.Subtype, &t.RawSubtype, t.Subtype.Values())
 	internal.UnmarshalTimestamp(aux.SignedDate, &t.SignedDate)
-
-	return nil
-}
-
-// DecodedRealtimeRequestBody is the decoded request body the App Store sends to your server to request a real-time retention message.
-//
-// https://developer.apple.com/documentation/retentionmessaging/decodedrealtimerequestbody
-type DecodedRealtimeRequestBody struct {
-	// The original transaction identifier of the customer's subscription.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/originaltransactionid
-	OriginalTransactionId string `json:"originalTransactionId"`
-
-	// The unique identifier of the app in the App Store.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/appappleid
-	AppAppleId int64 `json:"appAppleId"`
-
-	// The unique identifier of the app in the App Store.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/productid
-	ProductId string `json:"productId"`
-
-	// The device's locale.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/locale
-	UserLocale string `json:"userLocale"`
-
-	// A UUID the App Store server creates to uniquely identify each request.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/requestidentifier
-	RequestIdentifier string `json:"requestIdentifier"`
-
-	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature (JWS) data.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/signeddate
-	SignedDate int64 `json:"signedDate"`
-
-	// The server environment, either sandbox or production.
-	//
-	// https://developer.apple.com/documentation/retentionmessaging/environment
-	Environment Environment `json:"environment"`
-
-	// See environment
-	RawEnvironment string `json:"rawEnvironment"`
-}
-
-// UnmarshalJSON custom unmarshaler for DecodedRealtimeRequestBody to populate RawEnvironment
-func (d *DecodedRealtimeRequestBody) UnmarshalJSON(data []byte) error {
-	type Alias DecodedRealtimeRequestBody
-	aux := &struct {
-		Environment any `json:"environment"`
-		SignedDate  any `json:"signedDate"`
-		*Alias
-	}{
-		Alias: (*Alias)(d),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	// Handle Environment - populate both parsed enum and raw string
-	internal.UnmarshalStringEnum(aux.Environment, &d.Environment, &d.RawEnvironment)
-
-	// Handle floating point timestamps
-	internal.UnmarshalTimestamp(aux.SignedDate, &d.SignedDate)
 
 	return nil
 }
