@@ -4,7 +4,6 @@
 [![codecov](https://codecov.io/gh/laishere/app-store-server-library-go/branch/main/graph/badge.svg)](https://codecov.io/gh/laishere/app-store-server-library-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/laishere/app-store-server-library-go)](https://goreportcard.com/report/github.com/laishere/app-store-server-library-go)
 [![Go Reference](https://pkg.go.dev/badge/github.com/laishere/app-store-server-library-go.svg)](https://pkg.go.dev/github.com/laishere/app-store-server-library-go)
-[![GitHub release](https://img.shields.io/github/v/release/laishere/app-store-server-library-go)](https://github.com/laishere/app-store-server-library-go/releases)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/laishere/app-store-server-library-go)](https://github.com/laishere/app-store-server-library-go/blob/main/go.mod)
 
 A Go port of the [Apple App Store Server Library](https://github.com/apple/app-store-server-library-python).
