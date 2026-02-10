@@ -9,4 +9,4 @@ require (
 
 require golang.org/x/crypto v0.47.0
 
-retract [v1.0.0, v1.0.1]
+retract [v1.0.0, v1.0.2]
