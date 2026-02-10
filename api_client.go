@@ -16,8 +16,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const LIBRARY_VERSION = "1.0.0"
-
 // HTTPClient is an interface for making HTTP requests.
 // It allows for custom HTTP client implementations and facilitates testing with mock clients.
 type HTTPClient interface {
@@ -144,7 +142,7 @@ func (c *APIClient) makeRequest(method, path string, queryParams url.Values, bod
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("User-Agent", "app-store-server-library/go/"+LIBRARY_VERSION)
+	req.Header.Set("User-Agent", "app-store-server-library/go/"+Version())
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -376,7 +374,7 @@ func (c *APIClient) makeRequestWithBinaryBody(method, path string, queryParams u
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("User-Agent", "app-store-server-library/go/"+LIBRARY_VERSION)
+	req.Header.Set("User-Agent", "app-store-server-library/go/"+Version())
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", contentType)
 
