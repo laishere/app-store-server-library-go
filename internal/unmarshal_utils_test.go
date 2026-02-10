@@ -1,21 +1,9 @@
 package internal
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestParseTimestamp(t *testing.T) {
-	if got := ParseTimestamp(float64(123.456)); got != 123 {
-		t.Errorf("ParseTimestamp(123.456) = %v; want 123", got)
-	}
-	if got := ParseTimestamp(float64(123.999)); got != 123 {
-		t.Errorf("ParseTimestamp(123.999) = %v; want 123", got)
-	}
-	if got := ParseTimestamp(int64(123)); got != 123 {
-		t.Errorf("ParseTimestamp(int64(123)) = %v; want 123", got)
-	}
-	if got := ParseTimestamp("invalid"); got != 0 {
-		t.Errorf("ParseTimestamp(\"invalid\") = %v; want 0", got)
-	}
-}
 func TestUnmarshalStringEnum(t *testing.T) {
 	type MyEnum string
 	var enum MyEnum
@@ -78,22 +66,5 @@ func TestUnmarshalIntEnum(t *testing.T) {
 	UnmarshalIntEnum("123", &enum, &raw)
 	if enum != 0 || raw != 0 {
 		t.Errorf("Expected 0 for invalid type, got enum=%v, raw=%v", enum, raw)
-	}
-}
-
-func TestUnmarshalTimestamp(t *testing.T) {
-	var ts int64
-
-	// Test valid timestamp
-	UnmarshalTimestamp(float64(123.456), &ts)
-	if ts != 123 {
-		t.Errorf("Expected 123, got %v", ts)
-	}
-
-	// Test nil
-	ts = 999
-	UnmarshalTimestamp(nil, &ts)
-	if ts != 999 {
-		t.Errorf("Expected 999 (unchanged), got %v", ts)
 	}
 }

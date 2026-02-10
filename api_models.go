@@ -170,12 +170,12 @@ type NotificationHistoryRequest struct {
 	// The start date of the timespan for the requested App Store Server Notification history records. The startDate needs to precede the endDate. Choose a startDate that's within the past 180 days from the current date.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/startdate
-	StartDate int64 `json:"startDate,omitempty"`
+	StartDate Timestamp `json:"startDate,omitempty"`
 
 	// The end date of the timespan for the requested App Store Server Notification history records. Choose an endDate that's later than the startDate. If you choose an endDate in the future, the endpoint automatically uses the current date as the endDate.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/enddate
-	EndDate int64 `json:"endDate,omitempty"`
+	EndDate Timestamp `json:"endDate,omitempty"`
 
 	// A notification type. Provide this field to limit the notification history records to those with this one notification type. For a list of notifications types, see notificationType.
 	// Include either the transactionId or the notificationType in your query, but not both.
@@ -242,7 +242,7 @@ type SendAttemptItem struct {
 	// The date the App Store server attempts to send a notification.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/attemptdate
-	AttemptDate int64 `json:"attemptDate,omitempty"`
+	AttemptDate Timestamp `json:"attemptDate,omitempty"`
 
 	// The success or error information the App Store server records when it attempts to send an App Store server notification to your server.
 	//
@@ -352,7 +352,7 @@ type ExtendRenewalDateResponse struct {
 	// The new subscription expiration date for a subscription-renewal extension.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/effectivedate
-	EffectiveDate int64 `json:"effectiveDate,omitempty"`
+	EffectiveDate Timestamp `json:"effectiveDate,omitempty"`
 }
 
 // MassExtendRenewalDateRequest is the request body that contains subscription-renewal-extension data to apply for all eligible active subscribers.
@@ -412,7 +412,7 @@ type MassExtendRenewalDateStatusResponse struct {
 	// The UNIX time, in milliseconds, that the App Store completes a request to extend a subscription renewal date for eligible subscribers.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/completedate
-	CompleteDate int64 `json:"completeDate,omitempty"`
+	CompleteDate Timestamp `json:"completeDate,omitempty"`
 
 	// The count of subscriptions that successfully receive a subscription-renewal-date extension.
 	//
@@ -543,17 +543,17 @@ type JWSTransactionDecodedPayload struct {
 	// The time that the App Store charged the user's account for an in-app purchase, a restored in-app purchase, a subscription, or a subscription renewal after a lapse.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/purchasedate
-	PurchaseDate int64 `json:"purchaseDate,omitempty"`
+	PurchaseDate Timestamp `json:"purchaseDate,omitempty"`
 
 	// The purchase date of the transaction associated with the original transaction identifier.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/originalpurchasedate
-	OriginalPurchaseDate int64 `json:"originalPurchaseDate,omitempty"`
+	OriginalPurchaseDate Timestamp `json:"originalPurchaseDate,omitempty"`
 
 	// The UNIX time, in milliseconds, an auto-renewable subscription expires or renews.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/expiresdate
-	ExpiresDate int64 `json:"expiresDate,omitempty"`
+	ExpiresDate Timestamp `json:"expiresDate,omitempty"`
 
 	// The number of consumable products purchased.
 	//
@@ -584,7 +584,7 @@ type JWSTransactionDecodedPayload struct {
 	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature data.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/signeddate
-	SignedDate int64 `json:"signedDate,omitempty"`
+	SignedDate Timestamp `json:"signedDate,omitempty"`
 
 	// The reason that the App Store refunded the transaction or revoked it from Family Sharing.
 	//
@@ -597,7 +597,7 @@ type JWSTransactionDecodedPayload struct {
 	// The UNIX time, in milliseconds, that Apple Support refunded a transaction.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/revocationdate
-	RevocationDate int64 `json:"revocationDate,omitempty"`
+	RevocationDate Timestamp `json:"revocationDate,omitempty"`
 
 	// The Boolean value that indicates whether the user upgraded to another subscription.
 	//
@@ -698,12 +698,6 @@ func (t *JWSTransactionDecodedPayload) UnmarshalJSON(data []byte) error {
 		TransactionReason  any `json:"transactionReason"`
 		OfferDiscountType  any `json:"offerDiscountType"`
 		RevocationType     any `json:"revocationType"`
-		// Floating point timestamps
-		PurchaseDate         any `json:"purchaseDate"`
-		OriginalPurchaseDate any `json:"originalPurchaseDate"`
-		ExpiresDate          any `json:"expiresDate"`
-		SignedDate           any `json:"signedDate"`
-		RevocationDate       any `json:"revocationDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -721,11 +715,6 @@ func (t *JWSTransactionDecodedPayload) UnmarshalJSON(data []byte) error {
 	internal.UnmarshalStringEnum(aux.TransactionReason, &t.TransactionReason, &t.RawTransactionReason, t.TransactionReason.Values())
 	internal.UnmarshalStringEnum(aux.OfferDiscountType, &t.OfferDiscountType, &t.RawOfferDiscountType, t.OfferDiscountType.Values())
 	internal.UnmarshalStringEnum(aux.RevocationType, &t.RevocationType, &t.RawRevocationType, t.RevocationType.Values())
-	internal.UnmarshalTimestamp(aux.PurchaseDate, &t.PurchaseDate)
-	internal.UnmarshalTimestamp(aux.OriginalPurchaseDate, &t.OriginalPurchaseDate)
-	internal.UnmarshalTimestamp(aux.ExpiresDate, &t.ExpiresDate)
-	internal.UnmarshalTimestamp(aux.SignedDate, &t.SignedDate)
-	internal.UnmarshalTimestamp(aux.RevocationDate, &t.RevocationDate)
 
 	return nil
 }
@@ -781,7 +770,7 @@ type JWSRenewalInfoDecodedPayload struct {
 	// The time when the billing grace period for subscription renewals expires.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/graceperiodexpiresdate
-	GracePeriodExpiresDate int64 `json:"gracePeriodExpiresDate,omitempty"`
+	GracePeriodExpiresDate Timestamp `json:"gracePeriodExpiresDate,omitempty"`
 
 	// The type of subscription offer.
 	//
@@ -799,7 +788,7 @@ type JWSRenewalInfoDecodedPayload struct {
 	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature data.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/signeddate
-	SignedDate int64 `json:"signedDate,omitempty"`
+	SignedDate Timestamp `json:"signedDate,omitempty"`
 
 	// The server environment, either sandbox or production.
 	//
@@ -812,12 +801,12 @@ type JWSRenewalInfoDecodedPayload struct {
 	// The earliest start date of a subscription in a series of auto-renewable subscription purchases that ignores all lapses of paid service shorter than 60 days.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/recentsubscriptionstartdate
-	RecentSubscriptionStartDate int64 `json:"recentSubscriptionStartDate,omitempty"`
+	RecentSubscriptionStartDate Timestamp `json:"recentSubscriptionStartDate,omitempty"`
 
 	// The UNIX time, in milliseconds, that the most recent auto-renewable subscription purchase expires.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/renewaldate
-	RenewalDate int64 `json:"renewalDate,omitempty"`
+	RenewalDate Timestamp `json:"renewalDate,omitempty"`
 
 	// The currency code for the renewalPrice of the subscription.
 	//
@@ -868,11 +857,6 @@ func (t *JWSRenewalInfoDecodedPayload) UnmarshalJSON(data []byte) error {
 		OfferType           any `json:"offerType"`
 		Environment         any `json:"environment"`
 		OfferDiscountType   any `json:"offerDiscountType"`
-		// Floating point timestamps
-		GracePeriodExpiresDate      any `json:"gracePeriodExpiresDate"`
-		SignedDate                  any `json:"signedDate"`
-		RecentSubscriptionStartDate any `json:"recentSubscriptionStartDate"`
-		RenewalDate                 any `json:"renewalDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -888,10 +872,6 @@ func (t *JWSRenewalInfoDecodedPayload) UnmarshalJSON(data []byte) error {
 	internal.UnmarshalIntEnum(aux.OfferType, &t.OfferType, &t.RawOfferType)
 	internal.UnmarshalStringEnum(aux.Environment, &t.Environment, &t.RawEnvironment, t.Environment.Values())
 	internal.UnmarshalStringEnum(aux.OfferDiscountType, &t.OfferDiscountType, &t.RawOfferDiscountType, t.OfferDiscountType.Values())
-	internal.UnmarshalTimestamp(aux.GracePeriodExpiresDate, &t.GracePeriodExpiresDate)
-	internal.UnmarshalTimestamp(aux.SignedDate, &t.SignedDate)
-	internal.UnmarshalTimestamp(aux.RecentSubscriptionStartDate, &t.RecentSubscriptionStartDate)
-	internal.UnmarshalTimestamp(aux.RenewalDate, &t.RenewalDate)
 
 	return nil
 }
@@ -931,12 +911,12 @@ type AppTransaction struct {
 	// The date that the App Store signed the JWS app transaction.
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/signeddate
-	ReceiptCreationDate int64 `json:"receiptCreationDate,omitempty"`
+	ReceiptCreationDate Timestamp `json:"receiptCreationDate,omitempty"`
 
 	// The date the user originally purchased the app from the App Store.
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/originalpurchasedate
-	OriginalPurchaseDate int64 `json:"originalPurchaseDate,omitempty"`
+	OriginalPurchaseDate Timestamp `json:"originalPurchaseDate,omitempty"`
 
 	// The app version that the user originally purchased from the App Store.
 	//
@@ -956,7 +936,7 @@ type AppTransaction struct {
 	// The date the customer placed an order for the app before it's available in the App Store.
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/preorderdate
-	PreorderDate int64 `json:"preorderDate,omitempty"`
+	PreorderDate Timestamp `json:"preorderDate,omitempty"`
 
 	// The unique identifier of the app download transaction.
 	//
@@ -978,10 +958,6 @@ func (t *AppTransaction) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		ReceiptType      any `json:"receiptType"`
 		OriginalPlatform any `json:"originalPlatform"`
-		// Floating point timestamps
-		ReceiptCreationDate  any `json:"receiptCreationDate"`
-		OriginalPurchaseDate any `json:"originalPurchaseDate"`
-		PreorderDate         any `json:"preorderDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -993,9 +969,6 @@ func (t *AppTransaction) UnmarshalJSON(data []byte) error {
 
 	internal.UnmarshalStringEnum(aux.ReceiptType, &t.ReceiptType, &t.RawReceiptType, t.ReceiptType.Values())
 	internal.UnmarshalStringEnum(aux.OriginalPlatform, &t.OriginalPlatform, &t.RawOriginalPlatform, t.OriginalPlatform.Values())
-	internal.UnmarshalTimestamp(aux.ReceiptCreationDate, &t.ReceiptCreationDate)
-	internal.UnmarshalTimestamp(aux.OriginalPurchaseDate, &t.OriginalPurchaseDate)
-	internal.UnmarshalTimestamp(aux.PreorderDate, &t.PreorderDate)
 
 	return nil
 }

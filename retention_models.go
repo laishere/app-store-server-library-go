@@ -226,7 +226,7 @@ type PromotionalOfferSignatureV1 struct {
 	Nonce *string `json:"nonce,omitempty"`
 
 	// The UNIX time, in milliseconds, when you generate the signature.
-	Timestamp *int64 `json:"timestamp,omitempty"`
+	Timestamp *Timestamp `json:"timestamp,omitempty"`
 
 	// A string that identifies the private key you use to generate the signature.
 	KeyId *string `json:"keyId,omitempty"`
@@ -270,7 +270,7 @@ type DecodedRealtimeRequestBody struct {
 	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature (JWS) data.
 	//
 	// https://developer.apple.com/documentation/retentionmessaging/signeddate
-	SignedDate int64 `json:"signedDate"`
+	SignedDate Timestamp `json:"signedDate"`
 
 	// The server environment, either sandbox or production.
 	//
@@ -286,7 +286,6 @@ func (d *DecodedRealtimeRequestBody) UnmarshalJSON(data []byte) error {
 	type Alias DecodedRealtimeRequestBody
 	aux := &struct {
 		Environment any `json:"environment"`
-		SignedDate  any `json:"signedDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(d),
@@ -297,7 +296,6 @@ func (d *DecodedRealtimeRequestBody) UnmarshalJSON(data []byte) error {
 	}
 
 	internal.UnmarshalStringEnum(aux.Environment, &d.Environment, &d.RawEnvironment, d.Environment.Values())
-	internal.UnmarshalTimestamp(aux.SignedDate, &d.SignedDate)
 
 	return nil
 }

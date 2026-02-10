@@ -45,7 +45,7 @@ func main() {
 	}
 
 	fmt.Printf("Verified Notification: %s\n", payload.NotificationType)
-	fmt.Printf("Signed Date: %d\n", payload.SignedDate)
+	fmt.Printf("Signed Date: %v\n", payload.SignedDate)
 	if payload.Data != nil {
 		fmt.Printf("Bundle ID: %s\n", payload.Data.BundleId)
 	}

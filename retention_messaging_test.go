@@ -125,7 +125,7 @@ func TestRealtimeResponseBodyWithPromotionalOfferV1(t *testing.T) {
 	messageId := "d4e5f6a7-8901-2345-d4e5-f6a789012345"
 	nonce := "e5f6a789-0123-4567-e5f6-a78901234567"
 	appAccountToken := "f6a78901-2345-6789-f6a7-890123456789"
-	timestamp := int64(1698148900000)
+	timestamp := Timestamp(1698148900000)
 	productId := "com.example.product"
 	keyId := "keyId123"
 	offerId := "offer123"

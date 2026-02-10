@@ -42,10 +42,7 @@ type ResponseBodyV2DecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/version
 	Version string `json:"version,omitempty"`
 
-	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature data.
-	//
-	// https://developer.apple.com/documentation/appstoreserverapi/signeddate
-	SignedDate int64 `json:"signedDate,omitempty"`
+	SignedDate Timestamp `json:"signedDate,omitempty"`
 
 	// The summary data that appears when the App Store server completes your request to extend a subscription renewal date for eligible subscribers.
 	// The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
@@ -202,7 +199,7 @@ type ExternalPurchaseToken struct {
 	// The field of an external purchase token that contains the UNIX date, in milliseconds, when the system created the token.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/tokencreationdate
-	TokenCreationDate int64 `json:"tokenCreationDate,omitempty"`
+	TokenCreationDate Timestamp `json:"tokenCreationDate,omitempty"`
 
 	// The unique identifier of an app in the App Store.
 	//
@@ -268,7 +265,6 @@ func (t *ResponseBodyV2DecodedPayload) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		NotificationType any `json:"notificationType"`
 		Subtype          any `json:"subtype"`
-		SignedDate       any `json:"signedDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -280,7 +276,6 @@ func (t *ResponseBodyV2DecodedPayload) UnmarshalJSON(data []byte) error {
 
 	internal.UnmarshalStringEnum(aux.NotificationType, &t.NotificationType, &t.RawNotificationType, t.NotificationType.Values())
 	internal.UnmarshalStringEnum(aux.Subtype, &t.Subtype, &t.RawSubtype, t.Subtype.Values())
-	internal.UnmarshalTimestamp(aux.SignedDate, &t.SignedDate)
 
 	return nil
 }

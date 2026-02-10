@@ -260,7 +260,7 @@ func TestExtendSubscriptionRenewalDate(t *testing.T) {
 	assertEqual(t, "2312412", response.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "9993", response.WebOrderLineItemId, "WebOrderLineItemId")
 	assertEqual(t, true, response.Success, "Success")
-	assertEqual(t, int64(1698148900000), response.EffectiveDate, "EffectiveDate")
+	assertEqual(t, Timestamp(1698148900000), response.EffectiveDate, "EffectiveDate")
 }
 
 // Test GetAllSubscriptionStatuses
@@ -347,7 +347,7 @@ func TestGetStatusOfSubscriptionRenewalDateExtensions(t *testing.T) {
 	}
 	assertEqual(t, "20fba8a0-2b80-4a7d-a17f-85c1854727f8", response.RequestIdentifier, "RequestIdentifier")
 	assertEqual(t, true, response.Complete, "Complete")
-	assertEqual(t, int64(1698148900000), response.CompleteDate, "CompleteDate")
+	assertEqual(t, Timestamp(1698148900000), response.CompleteDate, "CompleteDate")
 	assertEqual(t, int64(30), response.SucceededCount, "SucceededCount")
 	assertEqual(t, int64(2), response.FailedCount, "FailedCount")
 }
@@ -398,8 +398,8 @@ func TestGetNotificationHistory(t *testing.T) {
 	)
 
 	request := NotificationHistoryRequest{
-		StartDate:           1698148900000,
-		EndDate:             1698148950000,
+		StartDate:           Timestamp(1698148900000),
+		EndDate:             Timestamp(1698148950000),
 		NotificationType:    NOTIFICATION_TYPE_SUBSCRIBED,
 		NotificationSubtype: SUBTYPE_INITIAL_BUY,
 		TransactionId:       "999733843",

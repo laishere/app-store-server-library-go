@@ -224,76 +224,61 @@ func (v *SignedDataVerifier) VerifyAndDecodeRealtimeRequest(signedPayload string
 }
 
 func (v *SignedDataVerifier) decodeSignedObject(signedObj string, destination any) error {
-	token, err := jwt.Parse(signedObj, func(token *jwt.Token) (any, error) {
-		if v.environment == ENVIRONMENT_XCODE || v.environment == ENVIRONMENT_LOCAL_TESTING {
-			// Skip verification for local testing
-			return nil, nil
-		}
-
-		x5c, ok := token.Header["x5c"].([]any)
-		if !ok || len(x5c) == 0 {
-			return nil, errors.New("x5c header is missing or empty")
-		}
-
-		certs := make([]string, len(x5c))
-		for i, v := range x5c {
-			certs[i], ok = v.(string)
-			if !ok {
-				return nil, errors.New("invalid x5c header format")
+	claims := jwt.MapClaims{}
+	var err error
+	if v.environment == ENVIRONMENT_XCODE || v.environment == ENVIRONMENT_LOCAL_TESTING {
+		_, _, err = new(jwt.Parser).ParseUnverified(signedObj, &claims)
+	} else {
+		_, err = jwt.ParseWithClaims(signedObj, &claims, func(token *jwt.Token) (any, error) {
+			x5c, ok := token.Header["x5c"].([]any)
+			if !ok || len(x5c) == 0 {
+				return nil, errors.New("x5c header is missing or empty")
 			}
-		}
 
-		alg, ok := token.Header["alg"].(string)
-		if !ok || alg != "ES256" {
-			return nil, errors.New("invalid algorithm header")
-		}
+			certs := make([]string, len(x5c))
+			for i, v := range x5c {
+				certs[i], ok = v.(string)
+				if !ok {
+					return nil, errors.New("invalid x5c header format")
+				}
+			}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			return nil, errors.New("failed to parse claims")
-		}
+			alg, ok := token.Header["alg"].(string)
+			if !ok || alg != "ES256" {
+				return nil, errors.New("invalid algorithm header")
+			}
 
-		var signedDate int64
-		if sd, ok := claims["signedDate"].(float64); ok {
-			signedDate = int64(sd)
-		} else if rc, ok := claims["receiptCreationDate"].(float64); ok {
-			signedDate = int64(rc)
-		}
+			var signedDateMillis int64
+			if sd, ok := claims["signedDate"].(int64); ok {
+				signedDateMillis = sd
+			}
+			if signedDateMillis == 0 {
+				if rcd, ok := claims["receiptCreationDate"].(int64); ok {
+					signedDateMillis = rcd
+				}
+			}
 
-		var effectiveDate time.Time
-		if v.enableOnlineChecks || signedDate == 0 {
-			effectiveDate = time.Now()
-		} else {
-			effectiveDate = time.Unix(signedDate/1000, 0)
-		}
+			var effectiveDate time.Time
+			if v.enableOnlineChecks || signedDateMillis == 0 {
+				effectiveDate = time.Now()
+			} else {
+				effectiveDate = time.UnixMilli(signedDateMillis)
+			}
 
-		publicKey, err := v.chainVerifier.verifyChain(certs, v.enableOnlineChecks, effectiveDate)
-		if err != nil {
-			return nil, err
-		}
+			publicKey, err := v.chainVerifier.verifyChain(certs, v.enableOnlineChecks, effectiveDate)
+			if err != nil {
+				return nil, err
+			}
 
-		return publicKey, nil
-	}, jwt.WithValidMethods([]string{"ES256"}))
+			return publicKey, nil
+		}, jwt.WithValidMethods([]string{"ES256"}))
+	}
 
 	if err != nil {
-		if v.environment == ENVIRONMENT_XCODE || v.environment == ENVIRONMENT_LOCAL_TESTING {
-			// If parsing failed but we are in local testing, we might still want to decode the payload
-			// But jwt.Parse already does decoding. If it returns an error, it might be due to signature verification.
-			// Let's re-parse without verification if needed or just handle it.
-			unverifiedToken, _, err := new(jwt.Parser).ParseUnverified(signedObj, jwt.MapClaims{})
-			if err != nil {
-				return NewVerificationException(VERIFICATION_FAILURE, err)
-			}
-			data, err := json.Marshal(unverifiedToken.Claims)
-			if err != nil {
-				return NewVerificationException(VERIFICATION_FAILURE, err)
-			}
-			return json.Unmarshal(data, destination)
-		}
 		return NewVerificationException(VERIFICATION_FAILURE, err)
 	}
 
-	data, err := json.Marshal(token.Claims)
+	data, err := json.Marshal(claims)
 	if err != nil {
 		return NewVerificationException(VERIFICATION_FAILURE, err)
 	}

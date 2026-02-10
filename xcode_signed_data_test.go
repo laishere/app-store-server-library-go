@@ -34,12 +34,12 @@ func TestXcodeSignedAppTransaction(t *testing.T) {
 	if appTransaction.VersionExternalIdentifier != 0 {
 		t.Errorf("Expected VersionExternalIdentifier to be 0, got %d", appTransaction.VersionExternalIdentifier)
 	}
-	assertEqual(t, int64(-62135769600000), appTransaction.OriginalPurchaseDate, "OriginalPurchaseDate")
+	assertEqual(t, Timestamp(-62135769600000), appTransaction.OriginalPurchaseDate, "OriginalPurchaseDate")
 	assertEqual(t, "1", appTransaction.OriginalApplicationVersion, "OriginalApplicationVersion")
 	assertEqual(t, "cYUsXc53EbYc0pOeXG5d6/31LGHeVGf84sqSN0OrJi5u/j2H89WWKgS8N0hMsMlf", appTransaction.DeviceVerification, "DeviceVerification")
 	assertEqual(t, "48c8b92d-ce0d-4229-bedf-e61b4f9cfc92", appTransaction.DeviceVerificationNonce, "DeviceVerificationNonce")
-	if appTransaction.PreorderDate != 0 {
-		t.Errorf("Expected PreorderDate to be 0, got %d", appTransaction.PreorderDate)
+	if !appTransaction.PreorderDate.IsZero() {
+		t.Errorf("Expected PreorderDate to be zero, got %v", appTransaction.PreorderDate)
 	}
 	assertEqual(t, ENVIRONMENT_XCODE, appTransaction.ReceiptType, "ReceiptType")
 	assertEqual(t, "Xcode", appTransaction.RawReceiptType, "RawReceiptType")
@@ -68,9 +68,9 @@ func TestXcodeSignedTransaction(t *testing.T) {
 	assertEqual(t, XCODE_BUNDLE_ID, transaction.BundleId, "BundleId")
 	assertEqual(t, "pass.premium", transaction.ProductId, "ProductId")
 	assertEqual(t, "6F3A93AB", transaction.SubscriptionGroupIdentifier, "SubscriptionGroupIdentifier")
-	assertEqual(t, int64(1697679936049), transaction.PurchaseDate, "PurchaseDate")
-	assertEqual(t, int64(1697679936049), transaction.OriginalPurchaseDate, "OriginalPurchaseDate")
-	assertEqual(t, int64(1700358336049), transaction.ExpiresDate, "ExpiresDate")
+	assertEqual(t, Timestamp(1697679936049), transaction.PurchaseDate, "PurchaseDate")
+	assertEqual(t, Timestamp(1697679936049), transaction.OriginalPurchaseDate, "OriginalPurchaseDate")
+	assertEqual(t, Timestamp(1700358336049), transaction.ExpiresDate, "ExpiresDate")
 	assertEqual(t, int32(1), transaction.Quantity, "Quantity")
 	assertEqual(t, TYPE_AUTO_RENEWABLE_SUBSCRIPTION, transaction.Type, "Type")
 	assertEqual(t, "Auto-Renewable Subscription", transaction.RawType, "RawType")
@@ -79,12 +79,12 @@ func TestXcodeSignedTransaction(t *testing.T) {
 	}
 	assertEqual(t, IN_APP_OWNERSHIP_TYPE_PURCHASED, transaction.InAppOwnershipType, "InAppOwnershipType")
 	assertEqual(t, "PURCHASED", transaction.RawInAppOwnershipType, "RawInAppOwnershipType")
-	assertEqual(t, int64(1697679936056), transaction.SignedDate, "SignedDate")
+	assertEqual(t, Timestamp(1697679936056), transaction.SignedDate, "SignedDate")
 	if transaction.RevocationReason != 0 {
 		t.Errorf("Expected RevocationReason to be 0, got %d", transaction.RevocationReason)
 	}
-	if transaction.RevocationDate != 0 {
-		t.Errorf("Expected RevocationDate to be 0, got %d", transaction.RevocationDate)
+	if !transaction.RevocationDate.IsZero() {
+		t.Errorf("Expected RevocationDate to be zero, got %v", transaction.RevocationDate)
 	}
 	assertEqual(t, false, transaction.IsUpgraded, "IsUpgraded")
 	assertEqual(t, OFFER_TYPE_INTRODUCTORY, transaction.OfferType, "OfferType")
@@ -129,8 +129,8 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 	if renewalInfo.PriceIncreaseStatus != 0 {
 		t.Errorf("Expected PriceIncreaseStatus to be 0, got %d", renewalInfo.PriceIncreaseStatus)
 	}
-	if renewalInfo.GracePeriodExpiresDate != 0 {
-		t.Errorf("Expected GracePeriodExpiresDate to be 0, got %d", renewalInfo.GracePeriodExpiresDate)
+	if !renewalInfo.GracePeriodExpiresDate.IsZero() {
+		t.Errorf("Expected GracePeriodExpiresDate to be zero, got %v", renewalInfo.GracePeriodExpiresDate)
 	}
 	if renewalInfo.OfferType != 0 {
 		t.Errorf("Expected OfferType to be 0, got %d", renewalInfo.OfferType)
@@ -138,11 +138,11 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 	if renewalInfo.OfferIdentifier != "" {
 		t.Errorf("Expected OfferIdentifier to be empty, got '%s'", renewalInfo.OfferIdentifier)
 	}
-	assertEqual(t, int64(1697679936711), renewalInfo.SignedDate, "SignedDate")
+	assertEqual(t, Timestamp(1697679936711), renewalInfo.SignedDate, "SignedDate")
 	assertEqual(t, ENVIRONMENT_XCODE, renewalInfo.Environment, "Environment")
 	assertEqual(t, "Xcode", renewalInfo.RawEnvironment, "RawEnvironment")
-	assertEqual(t, int64(1697679936049), renewalInfo.RecentSubscriptionStartDate, "RecentSubscriptionStartDate")
-	assertEqual(t, int64(1700358336049), renewalInfo.RenewalDate, "RenewalDate")
+	assertEqual(t, Timestamp(1697679936049), renewalInfo.RecentSubscriptionStartDate, "RecentSubscriptionStartDate")
+	assertEqual(t, Timestamp(1700358336049), renewalInfo.RenewalDate, "RenewalDate")
 }
 
 // Test Xcode signed app transaction with production environment should fail
