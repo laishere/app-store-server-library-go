@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -120,4 +121,32 @@ func assertEqual(t *testing.T, expected, actual any, fieldName string) {
 	if expected != actual {
 		t.Errorf("%s: expected %v, got %v", fieldName, expected, actual)
 	}
+}
+
+// assertNil is a helper function to assert that a value is nil
+func assertNil(t *testing.T, actual any, fieldName string) {
+	t.Helper()
+	if !isNil(actual) {
+		t.Errorf("%s: expected nil, got %v", fieldName, actual)
+	}
+}
+
+// assertNotNil is a helper function to assert that a value is not nil
+func assertNotNil(t *testing.T, actual any, fieldName string) {
+	t.Helper()
+	if isNil(actual) {
+		t.Fatalf("%s: expected not nil, got nil", fieldName)
+	}
+}
+
+func isNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	v := reflect.ValueOf(i)
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
+		return v.IsNil()
+	}
+	return false
 }

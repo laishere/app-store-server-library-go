@@ -23,24 +23,16 @@ func TestXcodeSignedAppTransaction(t *testing.T) {
 		t.Fatalf("Failed to verify and decode app transaction: %v", err)
 	}
 
-	if appTransaction == nil {
-		t.Fatal("AppTransaction should not be nil")
-	}
-	if appTransaction.AppAppleId != 0 {
-		t.Errorf("Expected AppAppleId to be 0, got %d", appTransaction.AppAppleId)
-	}
+	assertNotNil(t, appTransaction, "AppTransaction")
+	assertNil(t, appTransaction.AppAppleId, "AppAppleId")
 	assertEqual(t, XCODE_BUNDLE_ID, appTransaction.BundleId, "BundleId")
 	assertEqual(t, "1", appTransaction.ApplicationVersion, "ApplicationVersion")
-	if appTransaction.VersionExternalIdentifier != 0 {
-		t.Errorf("Expected VersionExternalIdentifier to be 0, got %d", appTransaction.VersionExternalIdentifier)
-	}
+	assertNil(t, appTransaction.VersionExternalIdentifier, "VersionExternalIdentifier")
 	assertEqual(t, Timestamp(-62135769600000), appTransaction.OriginalPurchaseDate, "OriginalPurchaseDate")
 	assertEqual(t, "1", appTransaction.OriginalApplicationVersion, "OriginalApplicationVersion")
 	assertEqual(t, "cYUsXc53EbYc0pOeXG5d6/31LGHeVGf84sqSN0OrJi5u/j2H89WWKgS8N0hMsMlf", appTransaction.DeviceVerification, "DeviceVerification")
 	assertEqual(t, "48c8b92d-ce0d-4229-bedf-e61b4f9cfc92", appTransaction.DeviceVerificationNonce, "DeviceVerificationNonce")
-	if !appTransaction.PreorderDate.IsZero() {
-		t.Errorf("Expected PreorderDate to be zero, got %v", appTransaction.PreorderDate)
-	}
+	assertNil(t, appTransaction.PreorderDate, "PreorderDate")
 	assertEqual(t, ENVIRONMENT_XCODE, appTransaction.ReceiptType, "ReceiptType")
 }
 
@@ -72,22 +64,14 @@ func TestXcodeSignedTransaction(t *testing.T) {
 	assertEqual(t, Timestamp(1700358336049), transaction.ExpiresDate, "ExpiresDate")
 	assertEqual(t, int32(1), transaction.Quantity, "Quantity")
 	assertEqual(t, TYPE_AUTO_RENEWABLE_SUBSCRIPTION, transaction.Type, "Type")
-	if transaction.AppAccountToken != "" {
-		t.Errorf("Expected AppAccountToken to be empty, got '%s'", transaction.AppAccountToken)
-	}
+	assertNil(t, transaction.AppAccountToken, "AppAccountToken")
 	assertEqual(t, IN_APP_OWNERSHIP_TYPE_PURCHASED, transaction.InAppOwnershipType, "InAppOwnershipType")
 	assertEqual(t, Timestamp(1697679936056), transaction.SignedDate, "SignedDate")
-	if transaction.RevocationReason != 0 {
-		t.Errorf("Expected RevocationReason to be 0, got %d", transaction.RevocationReason)
-	}
-	if !transaction.RevocationDate.IsZero() {
-		t.Errorf("Expected RevocationDate to be zero, got %v", transaction.RevocationDate)
-	}
+	assertNil(t, transaction.RevocationReason, "RevocationReason")
+	assertNil(t, transaction.RevocationDate, "RevocationDate")
 	assertEqual(t, false, transaction.IsUpgraded, "IsUpgraded")
 	assertEqual(t, OFFER_TYPE_INTRODUCTORY, transaction.OfferType, "OfferType")
-	if transaction.OfferIdentifier != "" {
-		t.Errorf("Expected OfferIdentifier to be empty, got '%s'", transaction.OfferIdentifier)
-	}
+	assertNil(t, transaction.OfferIdentifier, "OfferIdentifier")
 	assertEqual(t, ENVIRONMENT_XCODE, transaction.Environment, "Environment")
 	assertEqual(t, "USA", transaction.Storefront, "Storefront")
 	assertEqual(t, "143441", transaction.StorefrontId, "StorefrontId")
@@ -111,26 +95,16 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 		t.Fatalf("Failed to verify and decode renewal info: %v", err)
 	}
 
-	if renewalInfo.ExpirationIntent != 0 {
-		t.Errorf("Expected ExpirationIntent to be 0, got %d", renewalInfo.ExpirationIntent)
-	}
+	assertNil(t, renewalInfo.ExpirationIntent, "ExpirationIntent")
 	assertEqual(t, "0", renewalInfo.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "pass.premium", renewalInfo.AutoRenewProductId, "AutoRenewProductId")
 	assertEqual(t, "pass.premium", renewalInfo.ProductId, "ProductId")
 	assertEqual(t, AUTO_RENEW_STATUS_ON, renewalInfo.AutoRenewStatus, "AutoRenewStatus")
-	assertEqual(t, false, renewalInfo.IsInBillingRetryPeriod, "IsInBillingRetryPeriod")
-	if renewalInfo.PriceIncreaseStatus != 0 {
-		t.Errorf("Expected PriceIncreaseStatus to be 0, got %d", renewalInfo.PriceIncreaseStatus)
-	}
-	if !renewalInfo.GracePeriodExpiresDate.IsZero() {
-		t.Errorf("Expected GracePeriodExpiresDate to be zero, got %v", renewalInfo.GracePeriodExpiresDate)
-	}
-	if renewalInfo.OfferType != 0 {
-		t.Errorf("Expected OfferType to be 0, got %d", renewalInfo.OfferType)
-	}
-	if renewalInfo.OfferIdentifier != "" {
-		t.Errorf("Expected OfferIdentifier to be empty, got '%s'", renewalInfo.OfferIdentifier)
-	}
+	assertNil(t, renewalInfo.IsInBillingRetryPeriod, "IsInBillingRetryPeriod")
+	assertNil(t, renewalInfo.PriceIncreaseStatus, "PriceIncreaseStatus")
+	assertNil(t, renewalInfo.GracePeriodExpiresDate, "GracePeriodExpiresDate")
+	assertNil(t, renewalInfo.OfferType, "OfferType")
+	assertNil(t, renewalInfo.OfferIdentifier, "OfferIdentifier")
 	assertEqual(t, Timestamp(1697679936711), renewalInfo.SignedDate, "SignedDate")
 	assertEqual(t, ENVIRONMENT_XCODE, renewalInfo.Environment, "Environment")
 	assertEqual(t, Timestamp(1697679936049), renewalInfo.RecentSubscriptionStartDate, "RecentSubscriptionStartDate")

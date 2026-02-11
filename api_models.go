@@ -484,7 +484,7 @@ type JWSTransactionDecodedPayload struct {
 	// The UUID that an app optionally generates to map a customer's in-app purchase with its resulting App Store transaction.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken
-	AppAccountToken string `json:"appAccountToken,omitempty"`
+	AppAccountToken *string `json:"appAccountToken,omitempty"`
 
 	// A string that describes whether the transaction was purchased by the user, or is available to them through Family Sharing.
 	//
@@ -499,12 +499,12 @@ type JWSTransactionDecodedPayload struct {
 	// The reason that the App Store refunded the transaction or revoked it from Family Sharing.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/revocationreason
-	RevocationReason RevocationReason `json:"revocationReason,omitempty"`
+	RevocationReason *RevocationReason `json:"revocationReason,omitempty"`
 
 	// The UNIX time, in milliseconds, that Apple Support refunded a transaction.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/revocationdate
-	RevocationDate Timestamp `json:"revocationDate,omitempty"`
+	RevocationDate *Timestamp `json:"revocationDate,omitempty"`
 
 	// The Boolean value that indicates whether the user upgraded to another subscription.
 	//
@@ -519,7 +519,7 @@ type JWSTransactionDecodedPayload struct {
 	// The identifier that contains the offer code or the promotional offer identifier.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offeridentifier
-	OfferIdentifier string `json:"offerIdentifier,omitempty"`
+	OfferIdentifier *string `json:"offerIdentifier,omitempty"`
 
 	// The server environment, either sandbox or production.
 	//
@@ -584,7 +584,7 @@ type JWSRenewalInfoDecodedPayload struct {
 	// The reason the subscription expired.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/expirationintent
-	ExpirationIntent ExpirationIntent `json:"expirationIntent,omitempty"`
+	ExpirationIntent *ExpirationIntent `json:"expirationIntent,omitempty"`
 
 	// The original transaction identifier of a purchase.
 	//
@@ -609,27 +609,27 @@ type JWSRenewalInfoDecodedPayload struct {
 	// A Boolean value that indicates whether the App Store is attempting to automatically renew an expired subscription.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/isinbillingretryperiod
-	IsInBillingRetryPeriod bool `json:"isInBillingRetryPeriod,omitempty"`
+	IsInBillingRetryPeriod *bool `json:"isInBillingRetryPeriod,omitempty"`
 
 	// The status that indicates whether the auto-renewable subscription is subject to a price increase.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/priceincreasestatus
-	PriceIncreaseStatus PriceIncreaseStatus `json:"priceIncreaseStatus,omitempty"`
+	PriceIncreaseStatus *PriceIncreaseStatus `json:"priceIncreaseStatus,omitempty"`
 
 	// The time when the billing grace period for subscription renewals expires.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/graceperiodexpiresdate
-	GracePeriodExpiresDate Timestamp `json:"gracePeriodExpiresDate,omitempty"`
+	GracePeriodExpiresDate *Timestamp `json:"gracePeriodExpiresDate,omitempty"`
 
 	// The type of subscription offer.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offertype
-	OfferType OfferType `json:"offerType,omitempty"`
+	OfferType *OfferType `json:"offerType,omitempty"`
 
 	// The offer code or the promotional offer identifier.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offeridentifier
-	OfferIdentifier string `json:"offerIdentifier,omitempty"`
+	OfferIdentifier *string `json:"offerIdentifier,omitempty"`
 
 	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature data.
 	//
@@ -699,7 +699,7 @@ type AppTransaction struct {
 	// The unique identifier the App Store uses to identify the app.
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/appid
-	AppAppleId int64 `json:"appAppleId,omitempty"`
+	AppAppleId *int64 `json:"appAppleId,omitempty"`
 
 	// The bundle identifier that the app transaction applies to.
 	//
@@ -714,7 +714,7 @@ type AppTransaction struct {
 	// The version external identifier of the app
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/appversionid
-	VersionExternalIdentifier int64 `json:"versionExternalIdentifier,omitempty"`
+	VersionExternalIdentifier *int64 `json:"versionExternalIdentifier,omitempty"`
 
 	// The date that the App Store signed the JWS app transaction.
 	//
@@ -744,7 +744,7 @@ type AppTransaction struct {
 	// The date the customer placed an order for the app before it's available in the App Store.
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/preorderdate
-	PreorderDate Timestamp `json:"preorderDate,omitempty"`
+	PreorderDate *Timestamp `json:"preorderDate,omitempty"`
 
 	// The unique identifier of the app download transaction.
 	//

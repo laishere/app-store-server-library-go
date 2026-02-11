@@ -197,7 +197,7 @@ func (v *SignedDataVerifier) VerifyAndDecodeAppTransaction(signedAppTransaction 
 		return nil, err
 	}
 	environment := payload.ReceiptType
-	if payload.BundleId != v.bundleID || (v.environment == ENVIRONMENT_PRODUCTION && payload.AppAppleId != v.appAppleID) {
+	if payload.BundleId != v.bundleID || (v.environment == ENVIRONMENT_PRODUCTION && (payload.AppAppleId == nil || *payload.AppAppleId != v.appAppleID)) {
 		return nil, NewVerificationException(INVALID_APP_IDENTIFIER, errors.New("app identifier mismatch"))
 	}
 	if environment != v.environment {

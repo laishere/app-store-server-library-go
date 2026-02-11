@@ -12,7 +12,7 @@ type ResponseBodyV2DecodedPayload struct {
 	// Additional information that identifies the notification event. The subtype field is present only for specific version 2 notifications.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/subtype
-	Subtype Subtype `json:"subtype,omitempty"`
+	Subtype *Subtype `json:"subtype,omitempty"`
 
 	// A unique identifier for the notification.
 	//
@@ -92,7 +92,7 @@ type Data struct {
 	// The reason the customer requested the refund.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason
-	ConsumptionRequestReason ConsumptionRequestReason `json:"consumptionRequestReason,omitempty"`
+	ConsumptionRequestReason *ConsumptionRequestReason `json:"consumptionRequestReason,omitempty"`
 }
 
 // Summary is the payload data for a subscription-renewal-date extension notification.
