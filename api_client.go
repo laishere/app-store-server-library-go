@@ -27,16 +27,12 @@ type HTTPClient interface {
 type APIException struct {
 	HTTPStatusCode int
 	APIError       *APIError
-	RawAPIError    *int32
 	ErrorMessage   string
 }
 
 func (e *APIException) Error() string {
 	if e.APIError != nil {
 		return fmt.Sprintf("API error: %v (code: %d, message: %s)", *e.APIError, e.HTTPStatusCode, e.ErrorMessage)
-	}
-	if e.RawAPIError != nil {
-		return fmt.Sprintf("API error: raw code %d (HTTP: %d, message: %s)", *e.RawAPIError, e.HTTPStatusCode, e.ErrorMessage)
 	}
 	return fmt.Sprintf("HTTP error: %d (message: %s)", e.HTTPStatusCode, e.ErrorMessage)
 }
@@ -182,7 +178,6 @@ func (c *APIClient) handleErrorResponse(resp *http.Response) error {
 	return &APIException{
 		HTTPStatusCode: resp.StatusCode,
 		APIError:       &apiErr,
-		RawAPIError:    &errorResp.ErrorCode,
 		ErrorMessage:   errorResp.ErrorMessage,
 	}
 }

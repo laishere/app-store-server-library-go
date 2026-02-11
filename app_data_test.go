@@ -19,6 +19,5 @@ func TestAppDataDeserialization(t *testing.T) {
 	assertEqual(t, int64(987654321), appData.AppAppleId, "AppAppleId")
 	assertEqual(t, "com.example", appData.BundleId, "BundleId")
 	assertEqual(t, ENVIRONMENT_SANDBOX, appData.Environment, "Environment")
-	assertEqual(t, "Sandbox", appData.RawEnvironment, "RawEnvironment")
 	assertEqual(t, "signed-app-transaction-info", appData.SignedAppTransactionInfo, "SignedAppTransactionInfo")
 }

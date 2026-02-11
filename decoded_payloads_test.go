@@ -28,7 +28,6 @@ func TestVerifyAndDecodeAppTransaction(t *testing.T) {
 
 	// Verify fields
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, appTransaction.ReceiptType, "ReceiptType")
-	assertEqual(t, "LocalTesting", appTransaction.RawReceiptType, "RawReceiptType")
 	assertEqual(t, int64(531412), appTransaction.AppAppleId, "AppAppleId")
 	assertEqual(t, "com.example", appTransaction.BundleId, "BundleId")
 	assertEqual(t, "1.2.3", appTransaction.ApplicationVersion, "ApplicationVersion")
@@ -70,27 +69,20 @@ func TestVerifyAndDecodeSignedTransaction(t *testing.T) {
 	assertEqual(t, Timestamp(1698149000000), transaction.ExpiresDate, "ExpiresDate")
 	assertEqual(t, int32(1), transaction.Quantity, "Quantity")
 	assertEqual(t, TYPE_AUTO_RENEWABLE_SUBSCRIPTION, transaction.Type, "Type")
-	assertEqual(t, "Auto-Renewable Subscription", transaction.RawType, "RawType")
 	assertEqual(t, "7e3fb20b-4cdb-47cc-936d-99d65f608138", transaction.AppAccountToken, "AppAccountToken")
 	assertEqual(t, IN_APP_OWNERSHIP_TYPE_PURCHASED, transaction.InAppOwnershipType, "InAppOwnershipType")
-	assertEqual(t, "PURCHASED", transaction.RawInAppOwnershipType, "RawInAppOwnershipType")
 	assertEqual(t, Timestamp(1698148900000), transaction.SignedDate, "SignedDate")
 	assertEqual(t, REVOCATION_REASON_REFUNDED_DUE_TO_ISSUE, transaction.RevocationReason, "RevocationReason")
-	assertEqual(t, int32(1), transaction.RawRevocationReason, "RawRevocationReason")
 	assertEqual(t, "abc.123", transaction.OfferIdentifier, "OfferIdentifier")
 	assertEqual(t, true, transaction.IsUpgraded, "IsUpgraded")
 	assertEqual(t, OFFER_TYPE_INTRODUCTORY, transaction.OfferType, "OfferType")
-	assertEqual(t, int32(1), transaction.RawOfferType, "RawOfferType")
 	assertEqual(t, "USA", transaction.Storefront, "Storefront")
 	assertEqual(t, "143441", transaction.StorefrontId, "StorefrontId")
 	assertEqual(t, TRANSACTION_REASON_PURCHASE, transaction.TransactionReason, "TransactionReason")
-	assertEqual(t, "PURCHASE", transaction.RawTransactionReason, "RawTransactionReason")
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, transaction.Environment, "Environment")
-	assertEqual(t, "LocalTesting", transaction.RawEnvironment, "RawEnvironment")
 	assertEqual(t, int64(10990), transaction.Price, "Price")
 	assertEqual(t, "USD", transaction.Currency, "Currency")
 	assertEqual(t, OFFER_DISCOUNT_TYPE_PAY_AS_YOU_GO, transaction.OfferDiscountType, "OfferDiscountType")
-	assertEqual(t, "PAY_AS_YOU_GO", transaction.RawOfferDiscountType, "RawOfferDiscountType")
 }
 
 // Test transaction with revocation
@@ -112,7 +104,6 @@ func TestVerifyAndDecodeSignedTransactionWithRevocation(t *testing.T) {
 
 	// Verify revocation fields
 	assertEqual(t, REVOCATION_TYPE_REFUND_PRORATED, transaction.RevocationType, "RevocationType")
-	assertEqual(t, "REFUND_PRORATED", transaction.RawRevocationType, "RawRevocationType")
 	assertEqual(t, int32(50000), transaction.RevocationPercentage, "RevocationPercentage")
 }
 
@@ -135,28 +126,22 @@ func TestVerifyAndDecodeRenewalInfo(t *testing.T) {
 
 	// Verify all fields
 	assertEqual(t, EXPIRATION_INTENT_CUSTOMER_CANCELLED, renewalInfo.ExpirationIntent, "ExpirationIntent")
-	assertEqual(t, int32(1), renewalInfo.RawExpirationIntent, "RawExpirationIntent")
 	assertEqual(t, "12345", renewalInfo.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "com.example.product.2", renewalInfo.AutoRenewProductId, "AutoRenewProductId")
 	assertEqual(t, "com.example.product", renewalInfo.ProductId, "ProductId")
 	assertEqual(t, AUTO_RENEW_STATUS_ON, renewalInfo.AutoRenewStatus, "AutoRenewStatus")
-	assertEqual(t, int32(1), renewalInfo.RawAutoRenewStatus, "RawAutoRenewStatus")
 	assertEqual(t, true, renewalInfo.IsInBillingRetryPeriod, "IsInBillingRetryPeriod")
 	assertEqual(t, PRICE_INCREASE_STATUS_CUSTOMER_HAS_NOT_RESPONDED, renewalInfo.PriceIncreaseStatus, "PriceIncreaseStatus")
-	assertEqual(t, int32(0), renewalInfo.RawPriceIncreaseStatus, "RawPriceIncreaseStatus")
 	assertEqual(t, Timestamp(1698148900000), renewalInfo.GracePeriodExpiresDate, "GracePeriodExpiresDate")
 	assertEqual(t, OFFER_TYPE_PROMOTIONAL, renewalInfo.OfferType, "OfferType")
-	assertEqual(t, int32(2), renewalInfo.RawOfferType, "RawOfferType")
 	assertEqual(t, "abc.123", renewalInfo.OfferIdentifier, "OfferIdentifier")
 	assertEqual(t, Timestamp(1698148800000), renewalInfo.SignedDate, "SignedDate")
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, renewalInfo.Environment, "Environment")
-	assertEqual(t, "LocalTesting", renewalInfo.RawEnvironment, "RawEnvironment")
 	assertEqual(t, Timestamp(1698148800000), renewalInfo.RecentSubscriptionStartDate, "RecentSubscriptionStartDate")
 	assertEqual(t, Timestamp(1698148850000), renewalInfo.RenewalDate, "RenewalDate")
 	assertEqual(t, int64(9990), renewalInfo.RenewalPrice, "RenewalPrice")
 	assertEqual(t, "USD", renewalInfo.Currency, "Currency")
 	assertEqual(t, OFFER_DISCOUNT_TYPE_PAY_AS_YOU_GO, renewalInfo.OfferDiscountType, "OfferDiscountType")
-	assertEqual(t, "PAY_AS_YOU_GO", renewalInfo.RawOfferDiscountType, "RawOfferDiscountType")
 }
 
 // Test notification decoding (SUBSCRIBED type)
@@ -178,9 +163,7 @@ func TestVerifyAndDecodeNotification(t *testing.T) {
 
 	// Verify notification fields
 	assertEqual(t, NOTIFICATION_TYPE_SUBSCRIBED, notification.NotificationType, "NotificationType")
-	assertEqual(t, "SUBSCRIBED", notification.RawNotificationType, "RawNotificationType")
 	assertEqual(t, SUBTYPE_INITIAL_BUY, notification.Subtype, "Subtype")
-	assertEqual(t, "INITIAL_BUY", notification.RawSubtype, "RawSubtype")
 	assertEqual(t, "002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.NotificationUUID, "NotificationUUID")
 	assertEqual(t, "2.0", notification.Version, "Version")
 	assertEqual(t, Timestamp(1698148900000), notification.SignedDate, "SignedDate")
@@ -190,14 +173,12 @@ func TestVerifyAndDecodeNotification(t *testing.T) {
 		t.Fatal("Data should not be nil")
 	}
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, notification.Data.Environment, "Data.Environment")
-	assertEqual(t, "LocalTesting", notification.Data.RawEnvironment, "Data.RawEnvironment")
 	assertEqual(t, int64(41234), notification.Data.AppAppleId, "Data.AppAppleId")
 	assertEqual(t, "com.example", notification.Data.BundleId, "Data.BundleId")
 	assertEqual(t, "1.2.3", notification.Data.BundleVersion, "Data.BundleVersion")
 	assertEqual(t, "signed_transaction_info_value", notification.Data.SignedTransactionInfo, "Data.SignedTransactionInfo")
 	assertEqual(t, "signed_renewal_info_value", notification.Data.SignedRenewalInfo, "Data.SignedRenewalInfo")
 	assertEqual(t, STATUS_ACTIVE, notification.Data.Status, "Data.Status")
-	assertEqual(t, int32(1), notification.Data.RawStatus, "Data.RawStatus")
 
 	// Verify nil fields
 	if notification.Summary != nil {
@@ -226,13 +207,11 @@ func TestVerifyAndDecodeConsumptionRequestNotification(t *testing.T) {
 	}
 
 	assertEqual(t, NOTIFICATION_TYPE_CONSUMPTION_REQUEST, notification.NotificationType, "NotificationType")
-	assertEqual(t, "CONSUMPTION_REQUEST", notification.RawNotificationType, "RawNotificationType")
 
 	if notification.Data == nil {
 		t.Fatal("Data should not be nil")
 	}
 	assertEqual(t, CONSUMPTION_REQUEST_REASON_UNINTENDED_PURCHASE, notification.Data.ConsumptionRequestReason, "ConsumptionRequestReason")
-	assertEqual(t, "UNINTENDED_PURCHASE", notification.Data.RawConsumptionRequestReason, "RawConsumptionRequestReason")
 }
 
 // Test summary notification
@@ -288,9 +267,7 @@ func TestVerifyAndDecodeExternalPurchaseTokenNotification(t *testing.T) {
 	}
 
 	assertEqual(t, NOTIFICATION_TYPE_EXTERNAL_PURCHASE_TOKEN_NOTIFICATION, notification.NotificationType, "NotificationType")
-	assertEqual(t, "EXTERNAL_PURCHASE_TOKEN", notification.RawNotificationType, "RawNotificationType")
 	assertEqual(t, SUBTYPE_UNREPORTED, notification.Subtype, "Subtype")
-	assertEqual(t, "UNREPORTED", notification.RawSubtype, "RawSubtype")
 	assertEqual(t, "002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.NotificationUUID, "NotificationUUID")
 	assertEqual(t, "2.0", notification.Version, "Version")
 	assertEqual(t, Timestamp(1698148900000), notification.SignedDate, "SignedDate")
@@ -329,9 +306,7 @@ func TestVerifyAndDecodeExternalPurchaseTokenSandboxNotification(t *testing.T) {
 	}
 
 	assertEqual(t, NOTIFICATION_TYPE_EXTERNAL_PURCHASE_TOKEN_NOTIFICATION, notification.NotificationType, "NotificationType")
-	assertEqual(t, "EXTERNAL_PURCHASE_TOKEN", notification.RawNotificationType, "RawNotificationType")
 	assertEqual(t, SUBTYPE_UNREPORTED, notification.Subtype, "Subtype")
-	assertEqual(t, "UNREPORTED", notification.RawSubtype, "RawSubtype")
 	assertEqual(t, "002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.NotificationUUID, "NotificationUUID")
 	assertEqual(t, "2.0", notification.Version, "Version")
 	assertEqual(t, Timestamp(1698148900000), notification.SignedDate, "SignedDate")
@@ -371,7 +346,6 @@ func TestVerifyAndDecodeRescindConsentNotification(t *testing.T) {
 
 	// Verify notification type
 	assertEqual(t, NOTIFICATION_TYPE_RESCIND_CONSENT, notification.NotificationType, "NotificationType")
-	assertEqual(t, "RESCIND_CONSENT", notification.RawNotificationType, "RawNotificationType")
 	assertEqual(t, "002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.NotificationUUID, "NotificationUUID")
 	assertEqual(t, "2.0", notification.Version, "Version")
 	assertEqual(t, Timestamp(1698148900000), notification.SignedDate, "SignedDate")
@@ -395,7 +369,6 @@ func TestVerifyAndDecodeRescindConsentNotification(t *testing.T) {
 		t.Fatal("AppData should not be nil")
 	}
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, notification.AppData.Environment, "AppData.Environment")
-	assertEqual(t, "LocalTesting", notification.AppData.RawEnvironment, "AppData.RawEnvironment")
 	assertEqual(t, int64(41234), notification.AppData.AppAppleId, "AppData.AppAppleId")
 	assertEqual(t, "com.example", notification.AppData.BundleId, "AppData.BundleId")
 	assertEqual(t, "signed_app_transaction_info_value", notification.AppData.SignedAppTransactionInfo, "AppData.SignedAppTransactionInfo")
@@ -425,6 +398,5 @@ func TestVerifyAndDecodeRealtimeRequest(t *testing.T) {
 	assertEqual(t, "en-US", request.UserLocale, "UserLocale")
 	assertEqual(t, "3db5c98d-8acf-4e29-831e-8e1f82f9f6e9", request.RequestIdentifier, "RequestIdentifier")
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, request.Environment, "Environment")
-	assertEqual(t, "LocalTesting", request.RawEnvironment, "RawEnvironment")
 	assertEqual(t, Timestamp(1698148900000), request.SignedDate, "SignedDate")
 }

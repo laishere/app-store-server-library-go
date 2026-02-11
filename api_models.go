@@ -1,11 +1,5 @@
 package appstore
 
-import (
-	"encoding/json"
-
-	"github.com/laishere/app-store-server-library-go/internal"
-)
-
 // HistoryResponse is a response that contains the customer's transaction history for an app.
 //
 // https://developer.apple.com/documentation/appstoreserverapi/historyresponse
@@ -35,32 +29,10 @@ type HistoryResponse struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/environment
 	Environment Environment `json:"environment,omitempty"`
 
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
-
 	// An array of in-app purchase transactions for the customer, signed by Apple, in JSON Web Signature format.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/jwstransaction
 	SignedTransactions []string `json:"signedTransactions,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (h *HistoryResponse) UnmarshalJSON(data []byte) error {
-	type Alias HistoryResponse
-	aux := &struct {
-		Environment any `json:"environment"`
-		*Alias
-	}{
-		Alias: (*Alias)(h),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Environment, &h.Environment, &h.RawEnvironment, h.Environment.Values())
-
-	return nil
 }
 
 // TransactionInfoResponse is a response that contains signed transaction information for a single transaction.
@@ -82,9 +54,6 @@ type StatusResponse struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/environment
 	Environment Environment `json:"environment,omitempty"`
 
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
-
 	// The bundle identifier of an app.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/bundleid
@@ -99,25 +68,6 @@ type StatusResponse struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/subscriptiongroupidentifieritem
 	Data []SubscriptionGroupIdentifierItem `json:"data,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (s *StatusResponse) UnmarshalJSON(data []byte) error {
-	type Alias StatusResponse
-	aux := &struct {
-		Environment any `json:"environment"`
-		*Alias
-	}{
-		Alias: (*Alias)(s),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Environment, &s.Environment, &s.RawEnvironment, s.Environment.Values())
-
-	return nil
 }
 
 // SubscriptionGroupIdentifierItem is information for auto-renewable subscriptions, including signed transaction information and signed renewal information, for one subscription group.
@@ -143,9 +93,6 @@ type LastTransactionsItem struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/status
 	Status Status `json:"status,omitempty"`
-
-	// See status
-	RawStatus int32 `json:"rawStatus,omitempty"`
 
 	// The original transaction identifier of a purchase.
 	//
@@ -248,28 +195,6 @@ type SendAttemptItem struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/sendattemptresult
 	SendAttemptResult SendAttemptResult `json:"sendAttemptResult,omitempty"`
-
-	// See sendAttemptResult
-	RawSendAttemptResult string `json:"rawSendAttemptResult,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (s *SendAttemptItem) UnmarshalJSON(data []byte) error {
-	type Alias SendAttemptItem
-	aux := &struct {
-		SendAttemptResult any `json:"sendAttemptResult"`
-		*Alias
-	}{
-		Alias: (*Alias)(s),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.SendAttemptResult, &s.SendAttemptResult, &s.RawSendAttemptResult, s.SendAttemptResult.Values())
-
-	return nil
 }
 
 // OrderLookupResponse is a response that includes the order lookup status and an array of signed transactions for the in-app purchases in the order.
@@ -281,10 +206,7 @@ type OrderLookupResponse struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/orderlookupstatus
 	Status OrderLookupStatus `json:"status,omitempty"`
 
-	// See status
-	RawStatus int32 `json:"rawStatus,omitempty"`
-
-	// An array of in-app purchase transactions that are part of order, signed by Apple, in JSON Web Signature format.
+	// An array of signed transactions for the in-app purchases in the order, signed by Apple, in JSON Web Signature format.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/jwstransaction
 	SignedTransactions []string `json:"signedTransactions,omitempty"`
@@ -444,9 +366,6 @@ type ConsumptionRequest struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/deliverystatus
 	DeliveryStatus DeliveryStatus `json:"deliveryStatus"`
 
-	// See deliveryStatus
-	RawDeliveryStatus int32 `json:"rawDeliveryStatus"`
-
 	// An integer that indicates the percentage, in milliunits, of the In-App Purchase the customer consumed.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/consumptionpercentage
@@ -456,9 +375,6 @@ type ConsumptionRequest struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/refundpreference
 	RefundPreference RefundPreference `json:"refundPreference,omitempty"`
-
-	// See refundPreference
-	RawRefundPreference int32 `json:"rawRefundPreference,omitempty"`
 }
 
 // UpdateAppAccountTokenRequest is the request body that contains an app account token value.
@@ -565,9 +481,6 @@ type JWSTransactionDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/type
 	Type Type `json:"type,omitempty"`
 
-	// See type
-	RawType string `json:"rawType,omitempty"`
-
 	// The UUID that an app optionally generates to map a customer's in-app purchase with its resulting App Store transaction.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken
@@ -578,9 +491,6 @@ type JWSTransactionDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/inappownershiptype
 	InAppOwnershipType InAppOwnershipType `json:"inAppOwnershipType,omitempty"`
 
-	// See inAppOwnershipType
-	RawInAppOwnershipType string `json:"rawInAppOwnershipType,omitempty"`
-
 	// The UNIX time, in milliseconds, that the App Store signed the JSON Web Signature data.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/signeddate
@@ -590,9 +500,6 @@ type JWSTransactionDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/revocationreason
 	RevocationReason RevocationReason `json:"revocationReason,omitempty"`
-
-	// See revocationReason
-	RawRevocationReason int32 `json:"rawRevocationReason,omitempty"`
 
 	// The UNIX time, in milliseconds, that Apple Support refunded a transaction.
 	//
@@ -609,9 +516,6 @@ type JWSTransactionDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/offertype
 	OfferType OfferType `json:"offerType,omitempty"`
 
-	// See offerType
-	RawOfferType int32 `json:"rawOfferType,omitempty"`
-
 	// The identifier that contains the offer code or the promotional offer identifier.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offeridentifier
@@ -621,9 +525,6 @@ type JWSTransactionDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/environment
 	Environment Environment `json:"environment,omitempty"`
-
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
 
 	// The three-letter code that represents the country or region associated with the App Store storefront for the purchase.
 	//
@@ -640,9 +541,6 @@ type JWSTransactionDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/transactionreason
 	TransactionReason TransactionReason `json:"transactionReason,omitempty"`
 
-	// See transactionReason
-	RawTransactionReason string `json:"rawTransactionReason,omitempty"`
-
 	// The three-letter ISO 4217 currency code for the price of the product.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/currency
@@ -657,9 +555,6 @@ type JWSTransactionDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype
 	OfferDiscountType OfferDiscountType `json:"offerDiscountType,omitempty"`
-
-	// See offerDiscountType
-	RawOfferDiscountType string `json:"rawOfferDiscountType,omitempty"`
 
 	// The unique identifier of the app download transaction.
 	//
@@ -676,47 +571,10 @@ type JWSTransactionDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/revocationtype
 	RevocationType RevocationType `json:"revocationType,omitempty"`
 
-	// See revocationType
-	RawRevocationType string `json:"rawRevocationType,omitempty"`
-
 	// The percentage, in milliunits, of the transaction that the App Store has refunded or revoked.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/revocationpercentage
 	RevocationPercentage int32 `json:"revocationPercentage,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (t *JWSTransactionDecodedPayload) UnmarshalJSON(data []byte) error {
-	// Define a temporary struct with all fields as any or specific types
-	type Alias JWSTransactionDecodedPayload
-	aux := &struct {
-		Type               any `json:"type"`
-		InAppOwnershipType any `json:"inAppOwnershipType"`
-		RevocationReason   any `json:"revocationReason"`
-		OfferType          any `json:"offerType"`
-		Environment        any `json:"environment"`
-		TransactionReason  any `json:"transactionReason"`
-		OfferDiscountType  any `json:"offerDiscountType"`
-		RevocationType     any `json:"revocationType"`
-		*Alias
-	}{
-		Alias: (*Alias)(t),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Type, &t.Type, &t.RawType, t.Type.Values())
-	internal.UnmarshalStringEnum(aux.InAppOwnershipType, &t.InAppOwnershipType, &t.RawInAppOwnershipType, t.InAppOwnershipType.Values())
-	internal.UnmarshalIntEnum(aux.RevocationReason, &t.RevocationReason, &t.RawRevocationReason)
-	internal.UnmarshalIntEnum(aux.OfferType, &t.OfferType, &t.RawOfferType)
-	internal.UnmarshalStringEnum(aux.Environment, &t.Environment, &t.RawEnvironment, t.Environment.Values())
-	internal.UnmarshalStringEnum(aux.TransactionReason, &t.TransactionReason, &t.RawTransactionReason, t.TransactionReason.Values())
-	internal.UnmarshalStringEnum(aux.OfferDiscountType, &t.OfferDiscountType, &t.RawOfferDiscountType, t.OfferDiscountType.Values())
-	internal.UnmarshalStringEnum(aux.RevocationType, &t.RevocationType, &t.RawRevocationType, t.RevocationType.Values())
-
-	return nil
 }
 
 // JWSRenewalInfoDecodedPayload is a decoded payload containing subscription renewal information for an auto-renewable subscription.
@@ -727,9 +585,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/expirationintent
 	ExpirationIntent ExpirationIntent `json:"expirationIntent,omitempty"`
-
-	// See expirationIntent
-	RawExpirationIntent int32 `json:"rawExpirationIntent,omitempty"`
 
 	// The original transaction identifier of a purchase.
 	//
@@ -751,9 +606,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/autorenewstatus
 	AutoRenewStatus AutoRenewStatus `json:"autoRenewStatus,omitempty"`
 
-	// See autoRenewStatus
-	RawAutoRenewStatus int32 `json:"rawAutoRenewStatus,omitempty"`
-
 	// A Boolean value that indicates whether the App Store is attempting to automatically renew an expired subscription.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/isinbillingretryperiod
@@ -764,9 +616,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/priceincreasestatus
 	PriceIncreaseStatus PriceIncreaseStatus `json:"priceIncreaseStatus,omitempty"`
 
-	// See priceIncreaseStatus
-	RawPriceIncreaseStatus int32 `json:"rawPriceIncreaseStatus,omitempty"`
-
 	// The time when the billing grace period for subscription renewals expires.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/graceperiodexpiresdate
@@ -776,9 +625,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/offertype
 	OfferType OfferType `json:"offerType,omitempty"`
-
-	// See offerType
-	RawOfferType int32 `json:"rawOfferType,omitempty"`
 
 	// The offer code or the promotional offer identifier.
 	//
@@ -794,9 +640,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/environment
 	Environment Environment `json:"environment,omitempty"`
-
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
 
 	// The earliest start date of a subscription in a series of auto-renewable subscription purchases that ignores all lapses of paid service shorter than 60 days.
 	//
@@ -823,9 +666,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype
 	OfferDiscountType OfferDiscountType `json:"offerDiscountType,omitempty"`
 
-	// See offerDiscountType
-	RawOfferDiscountType string `json:"rawOfferDiscountType,omitempty"`
-
 	// An array of win-back offer identifiers that a customer is eligible to redeem, which sorts the identifiers to present the better offers first.
 	//
 	// https://developer.apple.com/documentation/appstoreserverapi/eligiblewinbackofferids
@@ -847,35 +687,6 @@ type JWSRenewalInfoDecodedPayload struct {
 	OfferPeriod string `json:"offerPeriod,omitempty"`
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (t *JWSRenewalInfoDecodedPayload) UnmarshalJSON(data []byte) error {
-	type Alias JWSRenewalInfoDecodedPayload
-	aux := &struct {
-		ExpirationIntent    any `json:"expirationIntent"`
-		AutoRenewStatus     any `json:"autoRenewStatus"`
-		PriceIncreaseStatus any `json:"priceIncreaseStatus"`
-		OfferType           any `json:"offerType"`
-		Environment         any `json:"environment"`
-		OfferDiscountType   any `json:"offerDiscountType"`
-		*Alias
-	}{
-		Alias: (*Alias)(t),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalIntEnum(aux.ExpirationIntent, &t.ExpirationIntent, &t.RawExpirationIntent)
-	internal.UnmarshalIntEnum(aux.AutoRenewStatus, &t.AutoRenewStatus, &t.RawAutoRenewStatus)
-	internal.UnmarshalIntEnum(aux.PriceIncreaseStatus, &t.PriceIncreaseStatus, &t.RawPriceIncreaseStatus)
-	internal.UnmarshalIntEnum(aux.OfferType, &t.OfferType, &t.RawOfferType)
-	internal.UnmarshalStringEnum(aux.Environment, &t.Environment, &t.RawEnvironment, t.Environment.Values())
-	internal.UnmarshalStringEnum(aux.OfferDiscountType, &t.OfferDiscountType, &t.RawOfferDiscountType, t.OfferDiscountType.Values())
-
-	return nil
-}
-
 // AppTransaction is information that represents the customer’s purchase of the app, cryptographically signed by the App Store.
 //
 // https://developer.apple.com/documentation/storekit/apptransaction
@@ -884,9 +695,6 @@ type AppTransaction struct {
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/environment
 	ReceiptType Environment `json:"receiptType,omitempty"`
-
-	// See receiptType
-	RawReceiptType string `json:"rawReceiptType,omitempty"`
 
 	// The unique identifier the App Store uses to identify the app.
 	//
@@ -947,28 +755,4 @@ type AppTransaction struct {
 	//
 	// https://developer.apple.com/documentation/storekit/apptransaction/originalplatform
 	OriginalPlatform PurchasePlatform `json:"originalPlatform,omitempty"`
-
-	// See originalPlatform
-	RawOriginalPlatform string `json:"rawOriginalPlatform,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (t *AppTransaction) UnmarshalJSON(data []byte) error {
-	type Alias AppTransaction
-	aux := &struct {
-		ReceiptType      any `json:"receiptType"`
-		OriginalPlatform any `json:"originalPlatform"`
-		*Alias
-	}{
-		Alias: (*Alias)(t),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.ReceiptType, &t.ReceiptType, &t.RawReceiptType, t.ReceiptType.Values())
-	internal.UnmarshalStringEnum(aux.OriginalPlatform, &t.OriginalPlatform, &t.RawOriginalPlatform, t.OriginalPlatform.Values())
-
-	return nil
 }

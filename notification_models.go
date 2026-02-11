@@ -1,11 +1,5 @@
 package appstore
 
-import (
-	"encoding/json"
-
-	"github.com/laishere/app-store-server-library-go/internal"
-)
-
 // ResponseBodyV2DecodedPayload is a decoded payload containing the version 2 notification data.
 //
 // https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload
@@ -15,16 +9,10 @@ type ResponseBodyV2DecodedPayload struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/notificationtype
 	NotificationType NotificationTypeV2 `json:"notificationType,omitempty"`
 
-	// See notificationType
-	RawNotificationType string `json:"rawNotificationType,omitempty"`
-
 	// Additional information that identifies the notification event. The subtype field is present only for specific version 2 notifications.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/subtype
 	Subtype Subtype `json:"subtype,omitempty"`
-
-	// See subtype
-	RawSubtype string `json:"rawSubtype,omitempty"`
 
 	// A unique identifier for the notification.
 	//
@@ -71,9 +59,6 @@ type Data struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/environment
 	Environment Environment `json:"environment,omitempty"`
 
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
-
 	// The unique identifier of an app in the App Store.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/appappleid
@@ -104,39 +89,10 @@ type Data struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/status
 	Status Status `json:"status,omitempty"`
 
-	// See status
-	RawStatus int32 `json:"rawStatus,omitempty"`
-
 	// The reason the customer requested the refund.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason
 	ConsumptionRequestReason ConsumptionRequestReason `json:"consumptionRequestReason,omitempty"`
-
-	// See consumptionRequestReason
-	RawConsumptionRequestReason string `json:"rawConsumptionRequestReason,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (d *Data) UnmarshalJSON(data []byte) error {
-	type Alias Data
-	aux := &struct {
-		Environment              any `json:"environment"`
-		Status                   any `json:"status"`
-		ConsumptionRequestReason any `json:"consumptionRequestReason"`
-		*Alias
-	}{
-		Alias: (*Alias)(d),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Environment, &d.Environment, &d.RawEnvironment, d.Environment.Values())
-	internal.UnmarshalIntEnum(aux.Status, &d.Status, &d.RawStatus)
-	internal.UnmarshalStringEnum(aux.ConsumptionRequestReason, &d.ConsumptionRequestReason, &d.RawConsumptionRequestReason, d.ConsumptionRequestReason.Values())
-
-	return nil
 }
 
 // Summary is the payload data for a subscription-renewal-date extension notification.
@@ -147,9 +103,6 @@ type Summary struct {
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/environment
 	Environment Environment `json:"environment,omitempty"`
-
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
 
 	// The unique identifier of an app in the App Store.
 	//
@@ -231,51 +184,8 @@ type AppData struct {
 	// https://developer.apple.com/documentation/appstoreservernotifications/environment
 	Environment Environment `json:"environment,omitempty"`
 
-	// See environment
-	RawEnvironment string `json:"rawEnvironment,omitempty"`
-
 	// App transaction information signed by the App Store, in JSON Web Signature (JWS) format.
 	//
 	// https://developer.apple.com/documentation/appstoreservernotifications/jwsapptransaction
 	SignedAppTransactionInfo string `json:"signedAppTransactionInfo,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (a *AppData) UnmarshalJSON(data []byte) error {
-	type Alias AppData
-	aux := &struct {
-		Environment any `json:"environment"`
-		*Alias
-	}{
-		Alias: (*Alias)(a),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Environment, &a.Environment, &a.RawEnvironment, a.Environment.Values())
-
-	return nil
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (t *ResponseBodyV2DecodedPayload) UnmarshalJSON(data []byte) error {
-	type Alias ResponseBodyV2DecodedPayload
-	aux := &struct {
-		NotificationType any `json:"notificationType"`
-		Subtype          any `json:"subtype"`
-		*Alias
-	}{
-		Alias: (*Alias)(t),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.NotificationType, &t.NotificationType, &t.RawNotificationType, t.NotificationType.Values())
-	internal.UnmarshalStringEnum(aux.Subtype, &t.Subtype, &t.RawSubtype, t.Subtype.Values())
-
-	return nil
 }

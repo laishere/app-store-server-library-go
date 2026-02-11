@@ -42,7 +42,6 @@ func TestXcodeSignedAppTransaction(t *testing.T) {
 		t.Errorf("Expected PreorderDate to be zero, got %v", appTransaction.PreorderDate)
 	}
 	assertEqual(t, ENVIRONMENT_XCODE, appTransaction.ReceiptType, "ReceiptType")
-	assertEqual(t, "Xcode", appTransaction.RawReceiptType, "RawReceiptType")
 }
 
 // Test Xcode signed transaction
@@ -73,12 +72,10 @@ func TestXcodeSignedTransaction(t *testing.T) {
 	assertEqual(t, Timestamp(1700358336049), transaction.ExpiresDate, "ExpiresDate")
 	assertEqual(t, int32(1), transaction.Quantity, "Quantity")
 	assertEqual(t, TYPE_AUTO_RENEWABLE_SUBSCRIPTION, transaction.Type, "Type")
-	assertEqual(t, "Auto-Renewable Subscription", transaction.RawType, "RawType")
 	if transaction.AppAccountToken != "" {
 		t.Errorf("Expected AppAccountToken to be empty, got '%s'", transaction.AppAccountToken)
 	}
 	assertEqual(t, IN_APP_OWNERSHIP_TYPE_PURCHASED, transaction.InAppOwnershipType, "InAppOwnershipType")
-	assertEqual(t, "PURCHASED", transaction.RawInAppOwnershipType, "RawInAppOwnershipType")
 	assertEqual(t, Timestamp(1697679936056), transaction.SignedDate, "SignedDate")
 	if transaction.RevocationReason != 0 {
 		t.Errorf("Expected RevocationReason to be 0, got %d", transaction.RevocationReason)
@@ -88,16 +85,13 @@ func TestXcodeSignedTransaction(t *testing.T) {
 	}
 	assertEqual(t, false, transaction.IsUpgraded, "IsUpgraded")
 	assertEqual(t, OFFER_TYPE_INTRODUCTORY, transaction.OfferType, "OfferType")
-	assertEqual(t, int32(1), transaction.RawOfferType, "RawOfferType")
 	if transaction.OfferIdentifier != "" {
 		t.Errorf("Expected OfferIdentifier to be empty, got '%s'", transaction.OfferIdentifier)
 	}
 	assertEqual(t, ENVIRONMENT_XCODE, transaction.Environment, "Environment")
-	assertEqual(t, "Xcode", transaction.RawEnvironment, "RawEnvironment")
 	assertEqual(t, "USA", transaction.Storefront, "Storefront")
 	assertEqual(t, "143441", transaction.StorefrontId, "StorefrontId")
 	assertEqual(t, TRANSACTION_REASON_PURCHASE, transaction.TransactionReason, "TransactionReason")
-	assertEqual(t, "PURCHASE", transaction.RawTransactionReason, "RawTransactionReason")
 }
 
 // Test Xcode signed renewal info
@@ -124,7 +118,6 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 	assertEqual(t, "pass.premium", renewalInfo.AutoRenewProductId, "AutoRenewProductId")
 	assertEqual(t, "pass.premium", renewalInfo.ProductId, "ProductId")
 	assertEqual(t, AUTO_RENEW_STATUS_ON, renewalInfo.AutoRenewStatus, "AutoRenewStatus")
-	assertEqual(t, int32(1), renewalInfo.RawAutoRenewStatus, "RawAutoRenewStatus")
 	assertEqual(t, false, renewalInfo.IsInBillingRetryPeriod, "IsInBillingRetryPeriod")
 	if renewalInfo.PriceIncreaseStatus != 0 {
 		t.Errorf("Expected PriceIncreaseStatus to be 0, got %d", renewalInfo.PriceIncreaseStatus)
@@ -140,7 +133,6 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 	}
 	assertEqual(t, Timestamp(1697679936711), renewalInfo.SignedDate, "SignedDate")
 	assertEqual(t, ENVIRONMENT_XCODE, renewalInfo.Environment, "Environment")
-	assertEqual(t, "Xcode", renewalInfo.RawEnvironment, "RawEnvironment")
 	assertEqual(t, Timestamp(1697679936049), renewalInfo.RecentSubscriptionStartDate, "RecentSubscriptionStartDate")
 	assertEqual(t, Timestamp(1700358336049), renewalInfo.RenewalDate, "RenewalDate")
 }

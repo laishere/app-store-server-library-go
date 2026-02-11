@@ -1,11 +1,5 @@
 package appstore
 
-import (
-	"encoding/json"
-
-	"github.com/laishere/app-store-server-library-go/internal"
-)
-
 // DefaultConfigurationRequest is the request body that contains the default configuration information.
 //
 // https://developer.apple.com/documentation/retentionmessaging/defaultconfigurationrequest
@@ -39,28 +33,6 @@ type GetImageListResponseItem struct {
 	//
 	// https://developer.apple.com/documentation/retentionmessaging/imagestate
 	ImageState ImageState `json:"imageState,omitempty"`
-
-	// See imageState
-	RawImageState string `json:"rawImageState,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (g *GetImageListResponseItem) UnmarshalJSON(data []byte) error {
-	type Alias GetImageListResponseItem
-	aux := &struct {
-		ImageState any `json:"imageState"`
-		*Alias
-	}{
-		Alias: (*Alias)(g),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.ImageState, &g.ImageState, &g.RawImageState, g.ImageState.Values())
-
-	return nil
 }
 
 // GetMessageListResponse is a response that contains status information for all messages.
@@ -86,28 +58,6 @@ type GetMessageListResponseItem struct {
 	//
 	// https://developer.apple.com/documentation/retentionmessaging/messageState
 	MessageState MessageState `json:"messageState,omitempty"`
-
-	// See messageState
-	RawMessageState string `json:"rawMessageState,omitempty"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (g *GetMessageListResponseItem) UnmarshalJSON(data []byte) error {
-	type Alias GetMessageListResponseItem
-	aux := &struct {
-		MessageState any `json:"messageState"`
-		*Alias
-	}{
-		Alias: (*Alias)(g),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.MessageState, &g.MessageState, &g.RawMessageState, g.MessageState.Values())
-
-	return nil
 }
 
 // UploadMessageRequestBody is the request body for uploading a message, which includes the message text and an optional image reference.
@@ -276,26 +226,4 @@ type DecodedRealtimeRequestBody struct {
 	//
 	// https://developer.apple.com/documentation/retentionmessaging/environment
 	Environment Environment `json:"environment"`
-
-	// See environment
-	RawEnvironment string `json:"rawEnvironment"`
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (d *DecodedRealtimeRequestBody) UnmarshalJSON(data []byte) error {
-	type Alias DecodedRealtimeRequestBody
-	aux := &struct {
-		Environment any `json:"environment"`
-		*Alias
-	}{
-		Alias: (*Alias)(d),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	internal.UnmarshalStringEnum(aux.Environment, &d.Environment, &d.RawEnvironment, d.Environment.Values())
-
-	return nil
 }

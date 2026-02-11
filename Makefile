@@ -51,7 +51,7 @@ test-race:
 
 ## cover: Run tests and generate coverage report
 cover:
-	$(GOTEST) -count=1 -coverprofile=coverage.out $(PKG)
+	$(GOTEST) -count=1 -covermode=atomic -coverprofile=coverage.out $(PKG)
 	$(GOCMD) tool cover -html=coverage.out
 
 ## clean: Remove temporary files and test cache

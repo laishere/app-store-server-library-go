@@ -209,7 +209,7 @@ func TestExtendRenewalDateForAllActiveSubscribers(t *testing.T) {
 
 	request := MassExtendRenewalDateRequest{
 		ExtendByDays:           45,
-		ExtendReasonCode:       CUSTOMER_SATISFACTION,
+		ExtendReasonCode:       EXTEND_REASON_CODE_CUSTOMER_SATISFACTION,
 		RequestIdentifier:      "fdf964a4-233b-486c-aac1-97d8d52688ac",
 		StorefrontCountryCodes: []string{"USA", "MEX"},
 		ProductId:              "com.example.productId",
@@ -245,7 +245,7 @@ func TestExtendSubscriptionRenewalDate(t *testing.T) {
 
 	request := ExtendRenewalDateRequest{
 		ExtendByDays:      45,
-		ExtendReasonCode:  CUSTOMER_SATISFACTION,
+		ExtendReasonCode:  EXTEND_REASON_CODE_CUSTOMER_SATISFACTION,
 		RequestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac",
 	}
 
@@ -288,7 +288,6 @@ func TestGetAllSubscriptionStatuses(t *testing.T) {
 		t.Fatal("Response should not be nil")
 	}
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
-	assertEqual(t, "LocalTesting", response.RawEnvironment, "RawEnvironment")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
 	assertEqual(t, int64(5454545), response.AppAppleId, "AppAppleId")
 
@@ -565,8 +564,8 @@ func TestGetTransactionHistoryWithUnknownEnvironment(t *testing.T) {
 		t.Fatal("Response should not be nil")
 	}
 
-	assertEqual(t, Environment(""), response.Environment, "Environment")
-	assertEqual(t, "LocalTestingxxx", response.RawEnvironment, "RawEnvironment")
+	assertEqual(t, Environment("LocalTestingxxx"), response.Environment, "Environment")
+	assertEqual(t, false, response.Environment.IsValid(), "Environment.IsValid")
 }
 
 // Test LookUpOrderID
@@ -641,9 +640,9 @@ func TestSendConsumptionInformation(t *testing.T) {
 	request := ConsumptionRequest{
 		CustomerConsented:     true,
 		SampleContentProvided: false,
-		DeliveryStatus:        DELIVERED_AND_WORKING_PROPERLY,
+		DeliveryStatus:        DELIVERY_STATUS_DELIVERED_AND_WORKING_PROPERLY,
 		ConsumptionPercentage: 50000,
-		RefundPreference:      PREFER_REFUND,
+		RefundPreference:      REFUND_PREFERENCE_PREFER_REFUND,
 	}
 
 	err := client.SendConsumptionInformation("49571273", request)
@@ -797,7 +796,7 @@ func TestAPIError_InvalidAppAccountTokenUUID(t *testing.T) {
 	request := ConsumptionRequest{
 		CustomerConsented:     true,
 		SampleContentProvided: false,
-		DeliveryStatus:        DELIVERED_AND_WORKING_PROPERLY,
+		DeliveryStatus:        DELIVERY_STATUS_DELIVERED_AND_WORKING_PROPERLY,
 	}
 
 	err := client.SendConsumptionInformation("1234", request)
@@ -956,13 +955,11 @@ func TestAPIException_Error(t *testing.T) {
 		t.Errorf("Expected %s, got %s", expected1, e1.Error())
 	}
 
-	rawCode := int32(12345)
 	e2 := &APIException{
 		HTTPStatusCode: 400,
-		RawAPIError:    &rawCode,
 		ErrorMessage:   "Unknown error",
 	}
-	expected2 := "API error: raw code 12345 (HTTP: 400, message: Unknown error)"
+	expected2 := "HTTP error: 400 (message: Unknown error)"
 	if e2.Error() != expected2 {
 		t.Errorf("Expected %s, got %s", expected2, e2.Error())
 	}
@@ -1092,7 +1089,6 @@ func TestAPIError_UnknownError(t *testing.T) {
 		t.Fatal("Expected non-nil APIError for unknown code (casted by Go)")
 	}
 	assertEqual(t, APIError(9990000), *apiErr.APIError, "APIErrorValue")
-	assertEqual(t, int32(9990000), *apiErr.RawAPIError, "RawAPIError")
 }
 
 // Test GetTransactionHistory: Malformed App Apple ID
