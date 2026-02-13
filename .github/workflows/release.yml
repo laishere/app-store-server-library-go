@@ -1,0 +1,28 @@
+name: Release Verification
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  check-version:
+    name: Check Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      
+      - name: Verify VERSION matches tag
+        shell: bash
+        run: |
+          VERSION=$(cat VERSION)
+          TAG="${{ github.ref_name }}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "Error: Version in 'VERSION' file ($VERSION) does not match tag ($TAG)"
+            exit 1
+          fi
+          echo "Success: Version in 'VERSION' file matches tag ($TAG)"
