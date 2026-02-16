@@ -7,6 +7,6 @@ require (
 	github.com/google/uuid v1.6.0
 )
 
-require golang.org/x/crypto v0.47.0
+require golang.org/x/crypto v0.48.0
 
 retract [v1.0.0, v1.0.2]
