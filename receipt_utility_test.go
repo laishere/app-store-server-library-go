@@ -1,45 +1,50 @@
 package appstore
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestExtractTransactionIdFromAppReceipt_Empty(t *testing.T) {
+	assert := assert.New(t)
 	receipt, err := readTestDataString("xcode/xcode-app-receipt-empty")
-	assertNoError(t, err, "Failed to read test data")
+	assert.NoError(err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromAppReceipt(receipt)
-	assertNoError(t, err, "Failed to extract transaction ID")
+	assert.NoError(err, "Failed to extract transaction ID")
 
-	assertNil(t, transactionId, "TransactionId")
+	assert.Nil(transactionId, "TransactionId")
 }
 
 func TestExtractTransactionIdFromAppReceipt_WithTransaction(t *testing.T) {
+	assert := assert.New(t)
 	receipt, err := readTestDataString("xcode/xcode-app-receipt-with-transaction")
-	assertNoError(t, err, "Failed to read test data")
+	assert.NoError(err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromAppReceipt(receipt)
-	assertNoError(t, err, "Failed to extract transaction ID")
+	assert.NoError(err, "Failed to extract transaction ID")
 
-	assertNotNil(t, transactionId, "TransactionId")
-	assertEqual(t, "0", *transactionId, "TransactionId")
+	assert.NotNil(transactionId, "TransactionId")
+	assert.Equal("0", *transactionId, "TransactionId")
 }
 
 func TestExtractTransactionIdFromTransactionReceipt(t *testing.T) {
+	assert := assert.New(t)
 	receipt, err := readTestDataString("mock_signed_data/legacyTransaction")
-	assertNoError(t, err, "Failed to read test data")
+	assert.NoError(err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromTransactionReceipt(receipt)
-	assertNoError(t, err, "Failed to extract transaction ID")
+	assert.NoError(err, "Failed to extract transaction ID")
 
-	assertNotNil(t, transactionId, "TransactionId")
-	assertEqual(t, "33993399", *transactionId, "TransactionId")
+	assert.NotNil(transactionId, "TransactionId")
+	assert.Equal("33993399", *transactionId, "TransactionId")
 }
 
 func TestEncodeLength(t *testing.T) {
+	assert := assert.New(t)
 	tests := []struct {
 		length   int
 		expected []byte
@@ -55,10 +60,10 @@ func TestEncodeLength(t *testing.T) {
 
 	for _, test := range tests {
 		result := encodeLength(test.length)
-		assertEqual(t, len(test.expected), len(result), "Encoded length size")
+		assert.Equal(len(test.expected), len(result), "Encoded length size")
 		for i, b := range result {
 			if i < len(test.expected) {
-				assertEqual(t, test.expected[i], b, "Encoded length byte")
+				assert.Equal(test.expected[i], b, "Encoded length byte")
 			}
 		}
 	}

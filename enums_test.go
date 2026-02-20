@@ -1,57 +1,59 @@
 package appstore
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestEnumsExpanded(t *testing.T) {
+	assert := assert.New(t)
 	// Environment
 	environments := []Environment{ENVIRONMENT_PRODUCTION, ENVIRONMENT_SANDBOX, ENVIRONMENT_XCODE, ENVIRONMENT_LOCAL_TESTING}
 	for _, e := range environments {
-		assertEqual(t, true, e.IsValid(), "Environment.IsValid")
-		assertEqual(t, string(e), e.Raw(), "Environment.Raw")
+		assert.Equal(true, e.IsValid(), "Environment.IsValid")
+		assert.Equal(string(e), e.Raw(), "Environment.Raw")
 	}
-	assertEqual(t, false, Environment("Invalid").IsValid(), "Environment(Invalid).IsValid")
+	assert.Equal(false, Environment("Invalid").IsValid(), "Environment(Invalid).IsValid")
 
 	// InAppOwnershipType
 	ownershipTypes := []InAppOwnershipType{IN_APP_OWNERSHIP_TYPE_FAMILY_SHARED, IN_APP_OWNERSHIP_TYPE_PURCHASED}
 	for _, i := range ownershipTypes {
-		assertEqual(t, true, i.IsValid(), "InAppOwnershipType.IsValid")
-		assertEqual(t, string(i), i.Raw(), "InAppOwnershipType.Raw")
+		assert.Equal(true, i.IsValid(), "InAppOwnershipType.IsValid")
+		assert.Equal(string(i), i.Raw(), "InAppOwnershipType.Raw")
 	}
-	assertEqual(t, false, InAppOwnershipType("Invalid").IsValid(), "InAppOwnershipType(Invalid).IsValid")
+	assert.Equal(false, InAppOwnershipType("Invalid").IsValid(), "InAppOwnershipType(Invalid).IsValid")
 
 	// OfferType
 	offerTypes := []OfferType{OFFER_TYPE_INTRODUCTORY, OFFER_TYPE_PROMOTIONAL, OFFER_TYPE_OFFER_CODE, OFFER_TYPE_WIN_BACK}
 	for _, o := range offerTypes {
-		assertEqual(t, true, o.IsValid(), "OfferType.IsValid")
-		assertEqual(t, int32(o), o.Raw(), "OfferType.Raw")
+		assert.Equal(true, o.IsValid(), "OfferType.IsValid")
+		assert.Equal(int32(o), o.Raw(), "OfferType.Raw")
 	}
-	assertEqual(t, false, OfferType(99).IsValid(), "OfferType(99).IsValid")
+	assert.Equal(false, OfferType(99).IsValid(), "OfferType(99).IsValid")
 
 	// Status
 	statuses := []Status{STATUS_ACTIVE, STATUS_EXPIRED, STATUS_BILLING_RETRY, STATUS_BILLING_GRACE_PERIOD, STATUS_REVOKED}
 	for _, s := range statuses {
-		assertEqual(t, true, s.IsValid(), "Status.IsValid")
-		assertEqual(t, int32(s), s.Raw(), "Status.Raw")
+		assert.Equal(true, s.IsValid(), "Status.IsValid")
+		assert.Equal(int32(s), s.Raw(), "Status.Raw")
 	}
-	assertEqual(t, false, Status(99).IsValid(), "Status(99).IsValid")
+	assert.Equal(false, Status(99).IsValid(), "Status(99).IsValid")
 
 	// Type
 	types := []Type{TYPE_AUTO_RENEWABLE_SUBSCRIPTION, TYPE_NON_CONSUMABLE, TYPE_CONSUMABLE, TYPE_NON_RENEWING_SUBSCRIPTION}
 	for _, typ := range types {
-		assertEqual(t, true, typ.IsValid(), "Type.IsValid")
-		assertEqual(t, string(typ), typ.Raw(), "Type.Raw")
+		assert.Equal(true, typ.IsValid(), "Type.IsValid")
+		assert.Equal(string(typ), typ.Raw(), "Type.Raw")
 	}
-	assertEqual(t, false, Type("Invalid").IsValid(), "Type(Invalid).IsValid")
+	assert.Equal(false, Type("Invalid").IsValid(), "Type(Invalid).IsValid")
 
 	// PurchasePlatform
 	platforms := []PurchasePlatform{PURCHASE_PLATFORM_MACOS, PURCHASE_PLATFORM_IOS, PURCHASE_PLATFORM_TVOS, PURCHASE_PLATFORM_VISIONOS}
 	for _, p := range platforms {
-		assertEqual(t, true, p.IsValid(), "PurchasePlatform.IsValid")
-		assertEqual(t, string(p), p.Raw(), "PurchasePlatform.Raw")
+		assert.Equal(true, p.IsValid(), "PurchasePlatform.IsValid")
+		assert.Equal(string(p), p.Raw(), "PurchasePlatform.Raw")
 	}
-	assertEqual(t, false, PurchasePlatform("Invalid").IsValid(), "PurchasePlatform(Invalid).IsValid")
+	assert.Equal(false, PurchasePlatform("Invalid").IsValid(), "PurchasePlatform(Invalid).IsValid")
 
 	// NotificationTypeV2
 	notificationTypes := []NotificationTypeV2{
@@ -77,10 +79,10 @@ func TestEnumsExpanded(t *testing.T) {
 		NOTIFICATION_TYPE_RESCIND_CONSENT,
 	}
 	for _, n := range notificationTypes {
-		assertEqual(t, true, n.IsValid(), "NotificationTypeV2.IsValid")
-		assertEqual(t, string(n), n.Raw(), "NotificationTypeV2.Raw")
+		assert.Equal(true, n.IsValid(), "NotificationTypeV2.IsValid")
+		assert.Equal(string(n), n.Raw(), "NotificationTypeV2.Raw")
 	}
-	assertEqual(t, false, NotificationTypeV2("Invalid").IsValid(), "NotificationTypeV2(Invalid).IsValid")
+	assert.Equal(false, NotificationTypeV2("Invalid").IsValid(), "NotificationTypeV2(Invalid).IsValid")
 
 	// Subtype
 	subtypes := []Subtype{
@@ -103,10 +105,10 @@ func TestEnumsExpanded(t *testing.T) {
 		SUBTYPE_UNREPORTED,
 	}
 	for _, s := range subtypes {
-		assertEqual(t, true, s.IsValid(), "Subtype.IsValid")
-		assertEqual(t, string(s), s.Raw(), "Subtype.Raw")
+		assert.Equal(true, s.IsValid(), "Subtype.IsValid")
+		assert.Equal(string(s), s.Raw(), "Subtype.Raw")
 	}
-	assertEqual(t, false, Subtype("Invalid").IsValid(), "Subtype(Invalid).IsValid")
+	assert.Equal(false, Subtype("Invalid").IsValid(), "Subtype(Invalid).IsValid")
 
 	// ExpirationIntent
 	expirationIntents := []ExpirationIntent{
@@ -117,34 +119,34 @@ func TestEnumsExpanded(t *testing.T) {
 		EXPIRATION_INTENT_OTHER,
 	}
 	for _, e := range expirationIntents {
-		assertEqual(t, true, e.IsValid(), "ExpirationIntent.IsValid")
-		assertEqual(t, int32(e), e.Raw(), "ExpirationIntent.Raw")
+		assert.Equal(true, e.IsValid(), "ExpirationIntent.IsValid")
+		assert.Equal(int32(e), e.Raw(), "ExpirationIntent.Raw")
 	}
-	assertEqual(t, false, ExpirationIntent(99).IsValid(), "ExpirationIntent(99).IsValid")
+	assert.Equal(false, ExpirationIntent(99).IsValid(), "ExpirationIntent(99).IsValid")
 
 	// ExtendReasonCode
 	extendReasonCodes := []ExtendReasonCode{EXTEND_REASON_CODE_UNDECLARED, EXTEND_REASON_CODE_CUSTOMER_SATISFACTION, EXTEND_REASON_CODE_OTHER_REASON, EXTEND_REASON_CODE_SERVICE_ISSUE}
 	for _, e := range extendReasonCodes {
-		assertEqual(t, true, e.IsValid(), "ExtendReasonCode.IsValid")
-		assertEqual(t, int32(e), e.Raw(), "ExtendReasonCode.Raw")
+		assert.Equal(true, e.IsValid(), "ExtendReasonCode.IsValid")
+		assert.Equal(int32(e), e.Raw(), "ExtendReasonCode.Raw")
 	}
-	assertEqual(t, false, ExtendReasonCode(99).IsValid(), "ExtendReasonCode(99).IsValid")
+	assert.Equal(false, ExtendReasonCode(99).IsValid(), "ExtendReasonCode(99).IsValid")
 
 	// OrderLookupStatus
 	orderLookupStatuses := []OrderLookupStatus{ORDER_LOOKUP_VALID, ORDER_LOOKUP_INVALID}
 	for _, o := range orderLookupStatuses {
-		assertEqual(t, true, o.IsValid(), "OrderLookupStatus.IsValid")
-		assertEqual(t, int32(o), o.Raw(), "OrderLookupStatus.Raw")
+		assert.Equal(true, o.IsValid(), "OrderLookupStatus.IsValid")
+		assert.Equal(int32(o), o.Raw(), "OrderLookupStatus.Raw")
 	}
-	assertEqual(t, false, OrderLookupStatus(99).IsValid(), "OrderLookupStatus(99).IsValid")
+	assert.Equal(false, OrderLookupStatus(99).IsValid(), "OrderLookupStatus(99).IsValid")
 
 	// AutoRenewStatus
 	autoRenewStatuses := []AutoRenewStatus{AUTO_RENEW_STATUS_OFF, AUTO_RENEW_STATUS_ON}
 	for _, a := range autoRenewStatuses {
-		assertEqual(t, true, a.IsValid(), "AutoRenewStatus.IsValid")
-		assertEqual(t, int32(a), a.Raw(), "AutoRenewStatus.Raw")
+		assert.Equal(true, a.IsValid(), "AutoRenewStatus.IsValid")
+		assert.Equal(int32(a), a.Raw(), "AutoRenewStatus.Raw")
 	}
-	assertEqual(t, false, AutoRenewStatus(99).IsValid(), "AutoRenewStatus(99).IsValid")
+	assert.Equal(false, AutoRenewStatus(99).IsValid(), "AutoRenewStatus(99).IsValid")
 
 	// PriceIncreaseStatus
 	priceIncreaseStatuses := []PriceIncreaseStatus{
@@ -152,97 +154,97 @@ func TestEnumsExpanded(t *testing.T) {
 		PRICE_INCREASE_STATUS_CUSTOMER_CONSENTED_OR_WAS_NOTIFIED_WITHOUT_NEEDING_CONSENT,
 	}
 	for _, p := range priceIncreaseStatuses {
-		assertEqual(t, true, p.IsValid(), "PriceIncreaseStatus.IsValid")
-		assertEqual(t, int32(p), p.Raw(), "PriceIncreaseStatus.Raw")
+		assert.Equal(true, p.IsValid(), "PriceIncreaseStatus.IsValid")
+		assert.Equal(int32(p), p.Raw(), "PriceIncreaseStatus.Raw")
 	}
-	assertEqual(t, false, PriceIncreaseStatus(99).IsValid(), "PriceIncreaseStatus(99).IsValid")
+	assert.Equal(false, PriceIncreaseStatus(99).IsValid(), "PriceIncreaseStatus(99).IsValid")
 
 	// DeliveryStatus
 	deliveryStatuses := []DeliveryStatus{DELIVERY_STATUS_DELIVERED_AND_WORKING_PROPERLY, DELIVERY_STATUS_DID_NOT_DELIVER_DUE_TO_ISSUE, DELIVERY_STATUS_OTHER_DELIVERY_STATUS, DELIVERY_STATUS_DELIVERED_AND_HAS_ISSUE}
 	for _, d := range deliveryStatuses {
-		assertEqual(t, true, d.IsValid(), "DeliveryStatus.IsValid")
-		assertEqual(t, int32(d), d.Raw(), "DeliveryStatus.Raw")
+		assert.Equal(true, d.IsValid(), "DeliveryStatus.IsValid")
+		assert.Equal(int32(d), d.Raw(), "DeliveryStatus.Raw")
 	}
-	assertEqual(t, false, DeliveryStatus(99).IsValid(), "DeliveryStatus(99).IsValid")
+	assert.Equal(false, DeliveryStatus(99).IsValid(), "DeliveryStatus(99).IsValid")
 
 	// RefundPreference
 	refundPreferences := []RefundPreference{REFUND_PREFERENCE_UNDECLARED, REFUND_PREFERENCE_PREFER_REFUND, REFUND_PREFERENCE_PREFER_NO_REFUND, REFUND_PREFERENCE_NO_PREFERENCE}
 	for _, r := range refundPreferences {
-		assertEqual(t, true, r.IsValid(), "RefundPreference.IsValid")
-		assertEqual(t, int32(r), r.Raw(), "RefundPreference.Raw")
+		assert.Equal(true, r.IsValid(), "RefundPreference.IsValid")
+		assert.Equal(int32(r), r.Raw(), "RefundPreference.Raw")
 	}
-	assertEqual(t, false, RefundPreference(99).IsValid(), "RefundPreference(99).IsValid")
+	assert.Equal(false, RefundPreference(99).IsValid(), "RefundPreference(99).IsValid")
 
 	// SendAttemptResult
 	sendAttemptResults := []SendAttemptResult{SEND_ATTEMPT_RESULT_SUCCESS, SEND_ATTEMPT_RESULT_TIMED_OUT, SEND_ATTEMPT_RESULT_TLS_ISSUE, SEND_ATTEMPT_RESULT_CIRCULAR_REDIRECT, SEND_ATTEMPT_RESULT_NO_RESPONSE, SEND_ATTEMPT_RESULT_SOCKET_ISSUE, SEND_ATTEMPT_RESULT_UNSUPPORTED_CHARSET, SEND_ATTEMPT_RESULT_INVALID_RESPONSE, SEND_ATTEMPT_RESULT_PREMATURE_CLOSE, SEND_ATTEMPT_RESULT_UNSUCCESSFUL_HTTP_RESPONSE_CODE, SEND_ATTEMPT_RESULT_OTHER}
 	for _, s := range sendAttemptResults {
-		assertEqual(t, true, s.IsValid(), "SendAttemptResult.IsValid")
-		assertEqual(t, string(s), s.Raw(), "SendAttemptResult.Raw")
+		assert.Equal(true, s.IsValid(), "SendAttemptResult.IsValid")
+		assert.Equal(string(s), s.Raw(), "SendAttemptResult.Raw")
 	}
-	assertEqual(t, false, SendAttemptResult("Invalid").IsValid(), "SendAttemptResult(Invalid).IsValid")
+	assert.Equal(false, SendAttemptResult("Invalid").IsValid(), "SendAttemptResult(Invalid).IsValid")
 
 	// ImageState
 	imageStates := []ImageState{IMAGE_STATE_PENDING, IMAGE_STATE_APPROVED, IMAGE_STATE_REJECTED}
 	for _, i := range imageStates {
-		assertEqual(t, true, i.IsValid(), "ImageState.IsValid")
-		assertEqual(t, string(i), i.Raw(), "ImageState.Raw")
+		assert.Equal(true, i.IsValid(), "ImageState.IsValid")
+		assert.Equal(string(i), i.Raw(), "ImageState.Raw")
 	}
-	assertEqual(t, false, ImageState("Invalid").IsValid(), "ImageState(Invalid).IsValid")
+	assert.Equal(false, ImageState("Invalid").IsValid(), "ImageState(Invalid).IsValid")
 
 	// MessageState
 	messageStates := []MessageState{MESSAGE_STATE_PENDING, MESSAGE_STATE_APPROVED, MESSAGE_STATE_REJECTED}
 	for _, m := range messageStates {
-		assertEqual(t, true, m.IsValid(), "MessageState.IsValid")
-		assertEqual(t, string(m), m.Raw(), "MessageState.Raw")
+		assert.Equal(true, m.IsValid(), "MessageState.IsValid")
+		assert.Equal(string(m), m.Raw(), "MessageState.Raw")
 	}
-	assertEqual(t, false, MessageState("Invalid").IsValid(), "MessageState(Invalid).IsValid")
+	assert.Equal(false, MessageState("Invalid").IsValid(), "MessageState(Invalid).IsValid")
 
 	// OfferDiscountType
 	offerDiscountTypes := []OfferDiscountType{OFFER_DISCOUNT_TYPE_FREE_TRIAL, OFFER_DISCOUNT_TYPE_PAY_AS_YOU_GO, OFFER_DISCOUNT_TYPE_PAY_UP_FRONT, OFFER_DISCOUNT_TYPE_ONE_TIME}
 	for _, o := range offerDiscountTypes {
-		assertEqual(t, true, o.IsValid(), "OfferDiscountType.IsValid")
-		assertEqual(t, string(o), o.Raw(), "OfferDiscountType.Raw")
+		assert.Equal(true, o.IsValid(), "OfferDiscountType.IsValid")
+		assert.Equal(string(o), o.Raw(), "OfferDiscountType.Raw")
 	}
-	assertEqual(t, false, OfferDiscountType("Invalid").IsValid(), "OfferDiscountType(Invalid).IsValid")
+	assert.Equal(false, OfferDiscountType("Invalid").IsValid(), "OfferDiscountType(Invalid).IsValid")
 
 	// RevocationReason
 	revocationReasons := []RevocationReason{REVOCATION_REASON_REFUNDED_FOR_OTHER_REASON, REVOCATION_REASON_REFUNDED_DUE_TO_ISSUE}
 	for _, r := range revocationReasons {
-		assertEqual(t, true, r.IsValid(), "RevocationReason.IsValid")
-		assertEqual(t, int32(r), r.Raw(), "RevocationReason.Raw")
+		assert.Equal(true, r.IsValid(), "RevocationReason.IsValid")
+		assert.Equal(int32(r), r.Raw(), "RevocationReason.Raw")
 	}
-	assertEqual(t, false, RevocationReason(99).IsValid(), "RevocationReason(99).IsValid")
+	assert.Equal(false, RevocationReason(99).IsValid(), "RevocationReason(99).IsValid")
 
 	// RevocationType
 	revocationTypes := []RevocationType{REVOCATION_TYPE_REFUND_FULL, REVOCATION_TYPE_REFUND_PRORATED, REVOCATION_TYPE_FAMILY_REVOKE}
 	for _, r := range revocationTypes {
-		assertEqual(t, true, r.IsValid(), "RevocationType.IsValid")
-		assertEqual(t, string(r), r.Raw(), "RevocationType.Raw")
+		assert.Equal(true, r.IsValid(), "RevocationType.IsValid")
+		assert.Equal(string(r), r.Raw(), "RevocationType.Raw")
 	}
-	assertEqual(t, false, RevocationType("Invalid").IsValid(), "RevocationType(Invalid).IsValid")
+	assert.Equal(false, RevocationType("Invalid").IsValid(), "RevocationType(Invalid).IsValid")
 
 	// TransactionReason
 	transactionReasons := []TransactionReason{TRANSACTION_REASON_PURCHASE, TRANSACTION_REASON_RENEWAL}
 	for _, t_reason := range transactionReasons {
-		assertEqual(t, true, t_reason.IsValid(), "TransactionReason.IsValid")
-		assertEqual(t, string(t_reason), t_reason.Raw(), "TransactionReason.Raw")
+		assert.Equal(true, t_reason.IsValid(), "TransactionReason.IsValid")
+		assert.Equal(string(t_reason), t_reason.Raw(), "TransactionReason.Raw")
 	}
-	assertEqual(t, false, TransactionReason("Invalid").IsValid(), "TransactionReason(Invalid).IsValid")
+	assert.Equal(false, TransactionReason("Invalid").IsValid(), "TransactionReason(Invalid).IsValid")
 
 	// ConsumptionRequestReason
 	consumptionRequestReasons := []ConsumptionRequestReason{CONSUMPTION_REQUEST_REASON_UNINTENDED_PURCHASE, CONSUMPTION_REQUEST_REASON_FULFILLMENT_ISSUE, CONSUMPTION_REQUEST_REASON_UNSATISFIED_WITH_PURCHASE, CONSUMPTION_REQUEST_REASON_LEGAL_REASON, CONSUMPTION_REQUEST_REASON_OTHER}
 	for _, c := range consumptionRequestReasons {
-		assertEqual(t, true, c.IsValid(), "ConsumptionRequestReason.IsValid")
-		assertEqual(t, string(c), c.Raw(), "ConsumptionRequestReason.Raw")
+		assert.Equal(true, c.IsValid(), "ConsumptionRequestReason.IsValid")
+		assert.Equal(string(c), c.Raw(), "ConsumptionRequestReason.Raw")
 	}
-	assertEqual(t, false, ConsumptionRequestReason("Invalid").IsValid(), "ConsumptionRequestReason(Invalid).IsValid")
+	assert.Equal(false, ConsumptionRequestReason("Invalid").IsValid(), "ConsumptionRequestReason(Invalid).IsValid")
 
 	// GetTransactionHistoryVersion
 	historyVersions := []GetTransactionHistoryVersion{GET_TRANSACTION_HISTORY_VERSION_V1, GET_TRANSACTION_HISTORY_VERSION_V2}
 	for _, g := range historyVersions {
-		assertEqual(t, true, g.IsValid(), "GetTransactionHistoryVersion.IsValid")
+		assert.Equal(true, g.IsValid(), "GetTransactionHistoryVersion.IsValid")
 	}
-	assertEqual(t, false, GetTransactionHistoryVersion("Invalid").IsValid(), "GetTransactionHistoryVersion(Invalid).IsValid")
+	assert.Equal(false, GetTransactionHistoryVersion("Invalid").IsValid(), "GetTransactionHistoryVersion(Invalid).IsValid")
 
 	// APIError
 	apiErrors := []APIError{
@@ -323,8 +325,8 @@ func TestEnumsExpanded(t *testing.T) {
 		API_ERROR_GENERAL_INTERNAL_RETRYABLE,
 	}
 	for _, apiErr := range apiErrors {
-		assertEqual(t, true, apiErr.IsValid(), "APIError.IsValid")
-		assertEqual(t, int32(apiErr), apiErr.Raw(), "APIError.Raw")
+		assert.Equal(true, apiErr.IsValid(), "APIError.IsValid")
+		assert.Equal(int32(apiErr), apiErr.Raw(), "APIError.Raw")
 	}
-	assertEqual(t, false, APIError(99).IsValid(), "APIError(99).IsValid")
+	assert.Equal(false, APIError(99).IsValid(), "APIError(99).IsValid")
 }

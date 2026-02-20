@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/url"
@@ -27,7 +28,8 @@ type MockHTTPClient struct {
 }
 
 func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	assertEqual(m.t, m.expectedMethod, req.Method, "HTTP method")
+	assert := assert.New(m.t)
+	assert.Equal(m.expectedMethod, req.Method, "HTTP method")
 
 	// Validate URL
 	expectedParsed, _ := url.Parse(m.expectedURL)
@@ -36,51 +38,51 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	expectedBase := fmt.Sprintf("%s://%s%s", expectedParsed.Scheme, expectedParsed.Host, expectedParsed.Path)
 	actualBase := fmt.Sprintf("%s://%s%s", actualParsed.Scheme, actualParsed.Host, actualParsed.Path)
 
-	assertEqual(m.t, expectedBase, actualBase, "URL base")
+	assert.Equal(expectedBase, actualBase, "URL base")
 
 	// Validate query parameters
 	if len(m.expectedParams) > 0 {
 		actualParams := req.URL.Query()
 		for key, expectedVals := range m.expectedParams {
 			actualVals := actualParams[key]
-			assertEqual(m.t, len(expectedVals), len(actualVals), "Param "+key+" values count")
+			assert.Equal(len(expectedVals), len(actualVals), "Param "+key+" values count")
 			for i, expectedVal := range expectedVals {
 				if i < len(actualVals) {
-					assertEqual(m.t, expectedVal, actualVals[i], "Param "+key+" value")
+					assert.Equal(expectedVal, actualVals[i], "Param "+key+" value")
 				}
 			}
 		}
 	}
 
 	// Validate headers
-	assertTrue(m.t, strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library/go"), "User-Agent header")
-	assertEqual(m.t, "application/json", req.Header.Get("Accept"), "Accept header")
+	assert.True(strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library/go"), "User-Agent header")
+	assert.Equal("application/json", req.Header.Get("Accept"), "Accept header")
 
 	// Validate and decode JWT token
 	authHeader := req.Header.Get("Authorization")
-	assertTrue(m.t, strings.HasPrefix(authHeader, "Bearer "), "Authorization header")
+	assert.True(strings.HasPrefix(authHeader, "Bearer "), "Authorization header")
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	header, payload, err := decodeJWTWithoutVerification(tokenString)
-	assertNoError(m.t, err, "Failed to decode JWT")
+	assert.NoError(err, "Failed to decode JWT")
 
 	// Validate JWT claims
-	assertEqual(m.t, "appstoreconnect-v1", payload["aud"], "JWT aud")
-	assertEqual(m.t, "issuerId", payload["iss"], "JWT iss")
-	assertEqual(m.t, "com.example", payload["bid"], "JWT bid")
-	assertEqual(m.t, "keyId", header["kid"], "JWT kid")
+	assert.Equal("appstoreconnect-v1", payload["aud"], "JWT aud")
+	assert.Equal("issuerId", payload["iss"], "JWT iss")
+	assert.Equal("com.example", payload["bid"], "JWT bid")
+	assert.Equal("keyId", header["kid"], "JWT kid")
 
 	// Validate request body
 	if m.expectedBinaryData != nil {
 		// Binary data validation
 		bodyBytes, _ := io.ReadAll(req.Body)
-		assertTrue(m.t, bytes.Equal(bodyBytes, m.expectedBinaryData), "Binary body mismatch")
-		assertEqual(m.t, m.expectedContentType, req.Header.Get("Content-Type"), "Content-Type header")
+		assert.True(bytes.Equal(bodyBytes, m.expectedBinaryData), "Binary body mismatch")
+		assert.Equal(m.expectedContentType, req.Header.Get("Content-Type"), "Content-Type header")
 	} else if m.expectedBody != nil {
 		// JSON body validation - only check that expected fields are present
 		var actualBody map[string]any
 		bodyBytes, _ := io.ReadAll(req.Body)
 		err := json.Unmarshal(bodyBytes, &actualBody)
-		assertNoError(m.t, err, "Failed to parse request body")
+		assert.NoError(err, "Failed to parse request body")
 
 		// Convert expected body to map
 		expectedMap, ok := m.expectedBody.(map[string]any)
@@ -88,12 +90,12 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 			// Check that all expected fields exist with correct values
 			for key, expectedVal := range expectedMap {
 				actualVal, exists := actualBody[key]
-				assertTrue(m.t, exists, "Missing expected field "+key+" in body")
+				assert.True(exists, "Missing expected field "+key+" in body")
 				if exists {
 					// Compare values
 					expJSON, _ := json.Marshal(expectedVal)
 					actJSON, _ := json.Marshal(actualVal)
-					assertTrue(m.t, bytes.Equal(expJSON, actJSON), "Field "+key+" mismatch")
+					assert.True(bytes.Equal(expJSON, actJSON), "Field "+key+" mismatch")
 				}
 			}
 		}
@@ -116,6 +118,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 // Helper to create API client with mock HTTP client
 func createMockAPIClient(t *testing.T, responseFile string, expectedMethod, expectedURL string,
 	expectedParams map[string][]string, expectedBody any, statusCode int) *APIClient {
+	assert := assert.New(t)
 
 	// Read response from testdata
 	var responseBody []byte
@@ -123,7 +126,7 @@ func createMockAPIClient(t *testing.T, responseFile string, expectedMethod, expe
 
 	if responseFile != "" {
 		responseBody, err = readTestData(fmt.Sprintf("models/%s", responseFile))
-		assertNoError(t, err, "Failed to read response file")
+		assert.NoError(err, "Failed to read response file")
 	} else {
 		// Empty response for 204 No Content
 		responseBody = []byte("{}")
@@ -140,17 +143,18 @@ func createMockAPIClient(t *testing.T, responseFile string, expectedMethod, expe
 	}
 
 	signingKey, err := readTestData("certs/testSigningKey.p8")
-	assertNoError(t, err, "Failed to read signing key")
+	assert.NoError(err, "Failed to read signing key")
 
 	client, err := NewAPIClientWithHTTPClient(signingKey, "keyId", "issuerId", "com.example",
 		ENVIRONMENT_LOCAL_TESTING, mockHTTP)
-	assertNoError(t, err, "Failed to create API client")
+	assert.NoError(err, "Failed to create API client")
 
 	return client
 }
 
 // Test ExtendRenewalDateForAllActiveSubscribers
 func TestExtendRenewalDateForAllActiveSubscribers(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"extendRenewalDateForAllActiveSubscribersResponse.json",
 		"POST",
@@ -175,14 +179,15 @@ func TestExtendRenewalDateForAllActiveSubscribers(t *testing.T) {
 	}
 
 	response, err := client.ExtendRenewalDateForAllActiveSubscribers(request)
-	assertNoError(t, err, "ExtendRenewalDateForAllActiveSubscribers failed")
+	assert.NoError(err, "ExtendRenewalDateForAllActiveSubscribers failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "758883e8-151b-47b7-abd0-60c4d804c2f5", response.RequestIdentifier, "requestIdentifier")
+	assert.NotNil(response, "Response")
+	assert.Equal("758883e8-151b-47b7-abd0-60c4d804c2f5", response.RequestIdentifier, "requestIdentifier")
 }
 
 // Test ExtendSubscriptionRenewalDate
 func TestExtendSubscriptionRenewalDate(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"extendSubscriptionRenewalDateResponse.json",
 		"PUT",
@@ -203,17 +208,18 @@ func TestExtendSubscriptionRenewalDate(t *testing.T) {
 	}
 
 	response, err := client.ExtendSubscriptionRenewalDate("4124214", request)
-	assertNoError(t, err, "ExtendSubscriptionRenewalDate failed")
+	assert.NoError(err, "ExtendSubscriptionRenewalDate failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "2312412", response.OriginalTransactionId, "OriginalTransactionId")
-	assertEqual(t, "9993", response.WebOrderLineItemId, "WebOrderLineItemId")
-	assertEqual(t, true, response.Success, "Success")
-	assertEqual(t, Timestamp(1698148900000), response.EffectiveDate, "EffectiveDate")
+	assert.NotNil(response, "Response")
+	assert.Equal("2312412", response.OriginalTransactionId, "OriginalTransactionId")
+	assert.Equal("9993", response.WebOrderLineItemId, "WebOrderLineItemId")
+	assert.Equal(true, response.Success, "Success")
+	assert.Equal(Timestamp(1698148900000), response.EffectiveDate, "EffectiveDate")
 }
 
 // Test GetAllSubscriptionStatuses
 func TestGetAllSubscriptionStatuses(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"getAllSubscriptionStatusesResponse.json",
 		"GET",
@@ -229,19 +235,20 @@ func TestGetAllSubscriptionStatuses(t *testing.T) {
 		STATUS_EXPIRED,
 		STATUS_ACTIVE,
 	})
-	assertNoError(t, err, "GetAllSubscriptionStatuses failed")
+	assert.NoError(err, "GetAllSubscriptionStatuses failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
-	assertEqual(t, "com.example", response.BundleId, "BundleId")
-	assertEqual(t, int64(5454545), response.AppAppleId, "AppAppleId")
+	assert.NotNil(response, "Response")
+	assert.Equal(ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
+	assert.Equal("com.example", response.BundleId, "BundleId")
+	assert.Equal(int64(5454545), response.AppAppleId, "AppAppleId")
 
 	// Verify subscription group data
-	assertEqual(t, 2, len(response.Data), "Subscription groups length")
+	assert.Equal(2, len(response.Data), "Subscription groups length")
 }
 
 // Test GetRefundHistory
 func TestGetRefundHistory(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"getRefundHistoryResponse.json",
 		"GET",
@@ -254,16 +261,17 @@ func TestGetRefundHistory(t *testing.T) {
 	)
 
 	response, err := client.GetRefundHistory("555555", "revision_input")
-	assertNoError(t, err, "GetRefundHistory failed")
+	assert.NoError(err, "GetRefundHistory failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, 2, len(response.SignedTransactions), "SignedTransactions length")
-	assertEqual(t, "revision_output", response.Revision, "Revision")
-	assertEqual(t, true, response.HasMore, "HasMore")
+	assert.NotNil(response, "Response")
+	assert.Equal(2, len(response.SignedTransactions), "SignedTransactions length")
+	assert.Equal("revision_output", response.Revision, "Revision")
+	assert.Equal(true, response.HasMore, "HasMore")
 }
 
 // Test GetStatusOfSubscriptionRenewalDateExtensions
 func TestGetStatusOfSubscriptionRenewalDateExtensions(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"getStatusOfSubscriptionRenewalDateExtensionsResponse.json",
 		"GET",
@@ -274,18 +282,19 @@ func TestGetStatusOfSubscriptionRenewalDateExtensions(t *testing.T) {
 	)
 
 	response, err := client.GetStatusOfSubscriptionRenewalDateExtensions("20fba8a0-2b80-4a7d-a17f-85c1854727f8", "com.example.product")
-	assertNoError(t, err, "GetStatusOfSubscriptionRenewalDateExtensions failed")
+	assert.NoError(err, "GetStatusOfSubscriptionRenewalDateExtensions failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "20fba8a0-2b80-4a7d-a17f-85c1854727f8", response.RequestIdentifier, "RequestIdentifier")
-	assertEqual(t, true, response.Complete, "Complete")
-	assertEqual(t, Timestamp(1698148900000), response.CompleteDate, "CompleteDate")
-	assertEqual(t, int64(30), response.SucceededCount, "SucceededCount")
-	assertEqual(t, int64(2), response.FailedCount, "FailedCount")
+	assert.NotNil(response, "Response")
+	assert.Equal("20fba8a0-2b80-4a7d-a17f-85c1854727f8", response.RequestIdentifier, "RequestIdentifier")
+	assert.Equal(true, response.Complete, "Complete")
+	assert.Equal(Timestamp(1698148900000), response.CompleteDate, "CompleteDate")
+	assert.Equal(int64(30), response.SucceededCount, "SucceededCount")
+	assert.Equal(int64(2), response.FailedCount, "FailedCount")
 }
 
 // Test GetTestNotificationStatus
 func TestGetTestNotificationStatus(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"getTestNotificationStatusResponse.json",
 		"GET",
@@ -296,15 +305,16 @@ func TestGetTestNotificationStatus(t *testing.T) {
 	)
 
 	response, err := client.GetTestNotificationStatus("8cd2974c-f905-492a-bf9a-b2f47c791d19")
-	assertNoError(t, err, "GetTestNotificationStatus failed")
+	assert.NoError(err, "GetTestNotificationStatus failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "signed_payload", response.SignedPayload, "SignedPayload")
-	assertEqual(t, 2, len(response.SendAttempts), "SendAttempts length")
+	assert.NotNil(response, "Response")
+	assert.Equal("signed_payload", response.SignedPayload, "SignedPayload")
+	assert.Equal(2, len(response.SendAttempts), "SendAttempts length")
 }
 
 // Test GetNotificationHistory
 func TestGetNotificationHistory(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"getNotificationHistoryResponse.json",
 		"POST",
@@ -333,16 +343,17 @@ func TestGetNotificationHistory(t *testing.T) {
 	}
 
 	response, err := client.GetNotificationHistory("a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request)
-	assertNoError(t, err, "GetNotificationHistory failed")
+	assert.NoError(err, "GetNotificationHistory failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "57715481-805a-4283-8499-1c19b5d6b20a", response.PaginationToken, "PaginationToken")
-	assertEqual(t, true, response.HasMore, "HasMore")
-	assertEqual(t, 2, len(response.NotificationHistory), "NotificationHistory length")
+	assert.NotNil(response, "Response")
+	assert.Equal("57715481-805a-4283-8499-1c19b5d6b20a", response.PaginationToken, "PaginationToken")
+	assert.Equal(true, response.HasMore, "HasMore")
+	assert.Equal(2, len(response.NotificationHistory), "NotificationHistory length")
 }
 
 // Test GetTransactionHistoryV1
 func TestGetTransactionHistoryV1(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionHistoryResponse.json",
 		"GET",
@@ -377,18 +388,19 @@ func TestGetTransactionHistoryV1(t *testing.T) {
 	queryParams.Set("revoked", "false")
 
 	response, err := client.GetTransactionHistory("1234", queryParams, "", GET_TRANSACTION_HISTORY_VERSION_V1)
-	assertNoError(t, err, "GetTransactionHistory failed")
+	assert.NoError(err, "GetTransactionHistory failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "revision_output", response.Revision, "Revision")
-	assertEqual(t, true, response.HasMore, "HasMore")
-	assertEqual(t, "com.example", response.BundleId, "BundleId")
-	assertEqual(t, int64(323232), response.AppAppleId, "AppAppleId")
-	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
+	assert.NotNil(response, "Response")
+	assert.Equal("revision_output", response.Revision, "Revision")
+	assert.Equal(true, response.HasMore, "HasMore")
+	assert.Equal("com.example", response.BundleId, "BundleId")
+	assert.Equal(int64(323232), response.AppAppleId, "AppAppleId")
+	assert.Equal(ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
 }
 
 // Test GetTransactionHistoryV2
 func TestGetTransactionHistoryV2(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionHistoryResponse.json",
 		"GET",
@@ -423,18 +435,19 @@ func TestGetTransactionHistoryV2(t *testing.T) {
 	queryParams.Set("revoked", "false")
 
 	response, err := client.GetTransactionHistory("1234", queryParams, "", GET_TRANSACTION_HISTORY_VERSION_V2)
-	assertNoError(t, err, "GetTransactionHistory failed")
+	assert.NoError(err, "GetTransactionHistory failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "revision_output", response.Revision, "Revision")
-	assertEqual(t, true, response.HasMore, "HasMore")
-	assertEqual(t, "com.example", response.BundleId, "BundleId")
-	assertEqual(t, int64(323232), response.AppAppleId, "AppAppleId")
-	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
+	assert.NotNil(response, "Response")
+	assert.Equal("revision_output", response.Revision, "Revision")
+	assert.Equal(true, response.HasMore, "HasMore")
+	assert.Equal("com.example", response.BundleId, "BundleId")
+	assert.Equal(int64(323232), response.AppAppleId, "AppAppleId")
+	assert.Equal(ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
 }
 
 // Test GetTransactionInfo
 func TestGetTransactionInfo(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionInfoResponse.json",
 		"GET",
@@ -445,14 +458,15 @@ func TestGetTransactionInfo(t *testing.T) {
 	)
 
 	response, err := client.GetTransactionInfo("1234")
-	assertNoError(t, err, "GetTransactionInfo failed")
+	assert.NoError(err, "GetTransactionInfo failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "signed_transaction_info_value", response.SignedTransactionInfo, "SignedTransactionInfo")
+	assert.NotNil(response, "Response")
+	assert.Equal("signed_transaction_info_value", response.SignedTransactionInfo, "SignedTransactionInfo")
 }
 
 // Test GetTransactionHistory with unknown environment
 func TestGetTransactionHistoryWithUnknownEnvironment(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionHistoryResponseWithMalformedEnvironment.json",
 		"GET",
@@ -465,16 +479,17 @@ func TestGetTransactionHistoryWithUnknownEnvironment(t *testing.T) {
 	)
 
 	response, err := client.GetTransactionHistory("1234", url.Values{"revision": {"revision_input"}}, "", GET_TRANSACTION_HISTORY_VERSION_V2)
-	assertNoError(t, err, "GetTransactionHistory failed")
+	assert.NoError(err, "GetTransactionHistory failed")
 
-	assertNotNil(t, response, "Response")
+	assert.NotNil(response, "Response")
 
-	assertEqual(t, Environment("LocalTestingxxx"), response.Environment, "Environment")
-	assertEqual(t, false, response.Environment.IsValid(), "Environment.IsValid")
+	assert.Equal(Environment("LocalTestingxxx"), response.Environment, "Environment")
+	assert.Equal(false, response.Environment.IsValid(), "Environment.IsValid")
 }
 
 // Test LookUpOrderID
 func TestLookUpOrderID(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"lookupOrderIdResponse.json",
 		"GET",
@@ -485,17 +500,18 @@ func TestLookUpOrderID(t *testing.T) {
 	)
 
 	response, err := client.LookUpOrderID("M12345")
-	assertNoError(t, err, "LookUpOrderID failed")
+	assert.NoError(err, "LookUpOrderID failed")
 
-	assertNotNil(t, response, "Response")
+	assert.NotNil(response, "Response")
 	if response.Status != 0 {
 		t.Logf("Status: got %v", response.Status)
 	}
-	assertEqual(t, 2, len(response.SignedTransactions), "SignedTransactions length")
+	assert.Equal(2, len(response.SignedTransactions), "SignedTransactions length")
 }
 
 // Test RequestTestNotification
 func TestRequestTestNotification(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"requestTestNotificationResponse.json",
 		"POST",
@@ -506,14 +522,15 @@ func TestRequestTestNotification(t *testing.T) {
 	)
 
 	response, err := client.RequestTestNotification()
-	assertNoError(t, err, "RequestTestNotification failed")
+	assert.NoError(err, "RequestTestNotification failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "ce3af791-365e-4c60-841b-1674b43c1609", response.TestNotificationToken, "TestNotificationToken")
+	assert.NotNil(response, "Response")
+	assert.Equal("ce3af791-365e-4c60-841b-1674b43c1609", response.TestNotificationToken, "TestNotificationToken")
 }
 
 // Test SendConsumptionInformation
 func TestSendConsumptionInformation(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"",
 		"PUT",
@@ -541,11 +558,12 @@ func TestSendConsumptionInformation(t *testing.T) {
 	}
 
 	err := client.SendConsumptionInformation("49571273", request)
-	assertNoError(t, err, "SendConsumptionInformation failed")
+	assert.NoError(err, "SendConsumptionInformation failed")
 }
 
 // Test SetAppAccountToken
 func TestSetAppAccountToken(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"",
 		"PUT",
@@ -565,11 +583,12 @@ func TestSetAppAccountToken(t *testing.T) {
 	}
 
 	err := client.SetAppAccountToken("1234", request)
-	assertNoError(t, err, "SetAppAccountToken failed")
+	assert.NoError(err, "SetAppAccountToken failed")
 }
 
 // Test error: HTTP 500
 func TestAPIError_500(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"",
 		"GET",
@@ -588,15 +607,16 @@ func TestAPIError_500(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = errorJSON
 
 	_, err := client.GetTransactionInfo("1234")
-	assertError(t, err, "Expected error for 500 status")
+	assert.Error(err, "Expected error for 500 status")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 500, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(500, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
 // Test error: HTTP 429 Rate Limit
 func TestAPIError_429_RateLimit(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"apiTooManyRequestsException.json",
 		"GET",
@@ -607,16 +627,17 @@ func TestAPIError_429_RateLimit(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionInfo("1234")
-	assertError(t, err, "Expected error for 429 status")
+	assert.Error(err, "Expected error for 429 status")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 429, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	assertEqual(t, API_ERROR_RATE_LIMIT_EXCEEDED, *apiErr.APIError, "APIError")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(429, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.Equal(API_ERROR_RATE_LIMIT_EXCEEDED, *apiErr.APIError, "APIError")
 }
 
 // Test error: Invalid Transaction ID
 func TestAPIError_InvalidTransactionId(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"invalidTransactionIdError.json",
 		"GET",
@@ -627,15 +648,16 @@ func TestAPIError_InvalidTransactionId(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionInfo("invalid")
-	assertError(t, err, "Expected error for invalid transaction ID")
+	assert.Error(err, "Expected error for invalid transaction ID")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
 // Test error: Family Transaction Not Supported
 func TestAPIError_FamilyTransactionNotSupported(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"familyTransactionNotSupportedError.json",
 		"GET",
@@ -646,15 +668,16 @@ func TestAPIError_FamilyTransactionNotSupported(t *testing.T) {
 	)
 
 	_, err := client.GetAllSubscriptionStatuses("9987", []Status{})
-	assertError(t, err, "Expected error for family transaction")
+	assert.Error(err, "Expected error for family transaction")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
 // Test error: Invalid App Account Token UUID
 func TestAPIError_InvalidAppAccountTokenUUID(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"invalidAppAccountTokenUUIDError.json",
 		"PUT",
@@ -675,46 +698,50 @@ func TestAPIError_InvalidAppAccountTokenUUID(t *testing.T) {
 	}
 
 	err := client.SendConsumptionInformation("1234", request)
-	assertError(t, err, "Expected error for invalid UUID")
+	assert.Error(err, "Expected error for invalid UUID")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
 // Test UploadImage
 func TestUploadImage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "PUT", "https://local-testing-base-url/inApps/v1/messaging/image/img_123", nil, nil, 204)
 	client.httpClient.(*MockHTTPClient).expectedBinaryData = []byte("fake-image-data")
 	client.httpClient.(*MockHTTPClient).expectedContentType = "image/png"
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.UploadImage("img_123", []byte("fake-image-data"))
-	assertNoError(t, err, "UploadImage failed")
+	assert.NoError(err, "UploadImage failed")
 }
 
 // Test DeleteImage
 func TestDeleteImage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "DELETE", "https://local-testing-base-url/inApps/v1/messaging/image/img_123", nil, nil, 204)
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteImage("img_123")
-	assertNoError(t, err, "DeleteImage failed")
+	assert.NoError(err, "DeleteImage failed")
 }
 
 // Test GetImageList
 func TestGetImageList(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "getImageListResponse.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/image/list", nil, nil, 200)
 
 	response, err := client.GetImageList()
-	assertNoError(t, err, "GetImageList failed")
+	assert.NoError(err, "GetImageList failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, 1, len(response.ImageIdentifiers), "ImageIdentifiers length")
+	assert.NotNil(response, "Response")
+	assert.Equal(1, len(response.ImageIdentifiers), "ImageIdentifiers length")
 }
 
 // Test UploadMessage
 func TestUploadMessage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "PUT", "https://local-testing-base-url/inApps/v1/messaging/message/msg_123", nil, map[string]any{
 		"header": "Hello",
 		"body":   "World",
@@ -727,31 +754,34 @@ func TestUploadMessage(t *testing.T) {
 	}
 
 	err := client.UploadMessage("msg_123", request)
-	assertNoError(t, err, "UploadMessage failed")
+	assert.NoError(err, "UploadMessage failed")
 }
 
 // Test DeleteMessage
 func TestDeleteMessage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "DELETE", "https://local-testing-base-url/inApps/v1/messaging/message/msg_123", nil, nil, 204)
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteMessage("msg_123")
-	assertNoError(t, err, "DeleteMessage failed")
+	assert.NoError(err, "DeleteMessage failed")
 }
 
 // Test GetMessageList
 func TestGetMessageList(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "getMessageListResponse.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/message/list", nil, nil, 200)
 
 	response, err := client.GetMessageList()
-	assertNoError(t, err, "GetMessageList failed")
+	assert.NoError(err, "GetMessageList failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, 1, len(response.MessageIdentifiers), "MessageIdentifiers length")
+	assert.NotNil(response, "Response")
+	assert.Equal(1, len(response.MessageIdentifiers), "MessageIdentifiers length")
 }
 
 // Test ConfigureDefaultMessage
 func TestConfigureDefaultMessage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "PUT", "https://local-testing-base-url/inApps/v1/messaging/default/product_1/en-US", nil, map[string]any{
 		"messageIdentifier": "msg_123",
 	}, 204)
@@ -762,31 +792,34 @@ func TestConfigureDefaultMessage(t *testing.T) {
 	}
 
 	err := client.ConfigureDefaultMessage("product_1", "en-US", request)
-	assertNoError(t, err, "ConfigureDefaultMessage failed")
+	assert.NoError(err, "ConfigureDefaultMessage failed")
 }
 
 // Test DeleteDefaultMessage
 func TestDeleteDefaultMessage(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "DELETE", "https://local-testing-base-url/inApps/v1/messaging/default/product_1/en-US", nil, nil, 204)
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteDefaultMessage("product_1", "en-US")
-	assertNoError(t, err, "DeleteDefaultMessage failed")
+	assert.NoError(err, "DeleteDefaultMessage failed")
 }
 
 // Test GetAppTransactionInfo
 func TestGetAppTransactionInfo(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "appTransactionInfoResponse.json", "GET", "https://local-testing-base-url/inApps/v1/transactions/appTransactions/tx_123", nil, nil, 200)
 
 	response, err := client.GetAppTransactionInfo("tx_123")
-	assertNoError(t, err, "GetAppTransactionInfo failed")
+	assert.NoError(err, "GetAppTransactionInfo failed")
 
-	assertNotNil(t, response, "Response")
-	assertEqual(t, "signed_app_transaction_info_value", response.SignedAppTransactionInfo, "SignedAppTransactionInfo")
+	assert.NotNil(response, "Response")
+	assert.Equal("signed_app_transaction_info_value", response.SignedAppTransactionInfo, "SignedAppTransactionInfo")
 }
 
 // Test APIException.Error
 func TestAPIException_Error(t *testing.T) {
+	assert := assert.New(t)
 	status := API_ERROR_GENERAL_BAD_REQUEST
 	e1 := &APIException{
 		HTTPStatusCode: 400,
@@ -794,37 +827,39 @@ func TestAPIException_Error(t *testing.T) {
 		ErrorMessage:   "Bad Request",
 	}
 	expected1 := "API error: 4000000 (code: 400, message: Bad Request)"
-	assertEqual(t, expected1, e1.Error(), "e1.Error()")
+	assert.Equal(expected1, e1.Error(), "e1.Error()")
 
 	e2 := &APIException{
 		HTTPStatusCode: 400,
 		ErrorMessage:   "Unknown error",
 	}
 	expected2 := "HTTP error: 400 (message: Unknown error)"
-	assertEqual(t, expected2, e2.Error(), "e2.Error()")
+	assert.Equal(expected2, e2.Error(), "e2.Error()")
 
 	e3 := &APIException{
 		HTTPStatusCode: 500,
 		ErrorMessage:   "Internal Server Error",
 	}
 	expected3 := "HTTP error: 500 (message: Internal Server Error)"
-	assertEqual(t, expected3, e3.Error(), "e3.Error()")
+	assert.Equal(expected3, e3.Error(), "e3.Error()")
 }
 
 // Test NewAPIClient constructor
 func TestNewAPIClient(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, err := readTestData("certs/testSigningKey.p8")
-	assertNoError(t, err, "Failed to read signing key")
+	assert.NoError(err, "Failed to read signing key")
 
 	client, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	assertNoError(t, err, "Failed to create API client")
+	assert.NoError(err, "Failed to create API client")
 
-	assertNotNil(t, client, "Client")
-	assertEqual(t, "https://local-testing-base-url", client.baseURL, "baseURL")
+	assert.NotNil(client, "Client")
+	assert.Equal("https://local-testing-base-url", client.baseURL, "baseURL")
 }
 
 // Test GetAppTransactionInfo: Invalid Transaction ID
 func TestGetAppTransactionInfo_InvalidTransactionId(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"invalidTransactionIdError.json",
 		"GET",
@@ -835,16 +870,17 @@ func TestGetAppTransactionInfo_InvalidTransactionId(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("invalid")
-	assertError(t, err, "Expected error for invalid transaction ID")
+	assert.Error(err, "Expected error for invalid transaction ID")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	assertEqual(t, API_ERROR_INVALID_TRANSACTION_ID, *apiErr.APIError, "APIError")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(400, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.Equal(API_ERROR_INVALID_TRANSACTION_ID, *apiErr.APIError, "APIError")
 }
 
 // Test GetAppTransactionInfo: App Transaction Does Not Exist
 func TestGetAppTransactionInfo_AppTransactionDoesNotExist(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"appTransactionDoesNotExistError.json",
 		"GET",
@@ -855,16 +891,17 @@ func TestGetAppTransactionInfo_AppTransactionDoesNotExist(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("nonexistent")
-	assertError(t, err, "Expected error for nonexistent app transaction")
+	assert.Error(err, "Expected error for nonexistent app transaction")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 404, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	assertEqual(t, API_ERROR_APP_TRANSACTION_DOES_NOT_EXIST_ERROR, *apiErr.APIError, "APIError")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(404, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.Equal(API_ERROR_APP_TRANSACTION_DOES_NOT_EXIST_ERROR, *apiErr.APIError, "APIError")
 }
 
 // Test GetAppTransactionInfo: Transaction ID Not Found
 func TestGetAppTransactionInfo_TransactionIdNotFound(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionIdNotFoundError.json",
 		"GET",
@@ -875,16 +912,17 @@ func TestGetAppTransactionInfo_TransactionIdNotFound(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("notfound")
-	assertError(t, err, "Expected error for transaction ID not found")
+	assert.Error(err, "Expected error for transaction ID not found")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 404, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	assertEqual(t, API_ERROR_TRANSACTION_ID_NOT_FOUND, *apiErr.APIError, "APIError")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(404, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.Equal(API_ERROR_TRANSACTION_ID_NOT_FOUND, *apiErr.APIError, "APIError")
 }
 
 // Test error: Unknown API Error
 func TestAPIError_UnknownError(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"apiUnknownError.json",
 		"GET",
@@ -895,17 +933,18 @@ func TestAPIError_UnknownError(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("1234")
-	assertError(t, err, "Expected error for unknown API error")
+	assert.Error(err, "Expected error for unknown API error")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	assertNotNil(t, apiErr.APIError, "APIError for unknown code")
-	assertEqual(t, APIError(9990000), *apiErr.APIError, "APIErrorValue")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(400, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.NotNil(apiErr.APIError, "APIError for unknown code")
+	assert.Equal(APIError(9990000), *apiErr.APIError, "APIErrorValue")
 }
 
 // Test GetTransactionHistory: Malformed App Apple ID
 func TestGetTransactionHistory_MalformedAppAppleId(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t,
 		"transactionHistoryResponseWithMalformedAppAppleId.json",
 		"GET",
@@ -916,70 +955,78 @@ func TestGetTransactionHistory_MalformedAppAppleId(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionHistory("1234", url.Values{}, "", GET_TRANSACTION_HISTORY_VERSION_V1)
-	assertError(t, err, "Expected error for malformed AppAppleId")
+	assert.Error(err, "Expected error for malformed AppAppleId")
 }
 
 // Test NewAPIClient: Invalid PEM
 func TestNewAPIClient_InvalidPEM(t *testing.T) {
+	assert := assert.New(t)
 	_, err := NewAPIClient([]byte("invalid pem"), "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	assertError(t, err, "Expected error for invalid PEM")
-	assertEqual(t, "failed to parse PEM block from signing key", err.Error(), "Error message")
+	assert.Error(err, "Expected error for invalid PEM")
+	assert.Equal("failed to parse PEM block from signing key", err.Error(), "Error message")
 }
 
 // Test NewAPIClient: RSA Key (Non-ECDSA)
 func TestNewAPIClient_RSAKey(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/rsa_key.pem")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	assertError(t, err, "Expected error for RSA key")
-	assertEqual(t, "key is not an ECDSA private key", err.Error(), "Error message")
+	assert.Error(err, "Expected error for RSA key")
+	assert.Equal("key is not an ECDSA private key", err.Error(), "Error message")
 }
 
 // Test NewAPIClient: Non-PKCS8 Key
 func TestNewAPIClient_NonPKCS8Key(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/ec_key.pem")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	assertError(t, err, "Expected error for Non-PKCS8 key")
-	assertTrue(t, strings.Contains(err.Error(), "failed to parse private key"), "Error message contains failure")
+	assert.Error(err, "Expected error for Non-PKCS8 key")
+	assert.True(strings.Contains(err.Error(), "failed to parse private key"), "Error message contains failure")
 }
 
 // Test NewAPIClient: Invalid Environment
 func TestNewAPIClient_InvalidEnvironment(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", Environment("Invalid"))
-	assertError(t, err, "Expected error for invalid environment")
+	assert.Error(err, "Expected error for invalid environment")
 }
 
 // Test NewAPIClient: Xcode Environment
 func TestNewAPIClient_XcodeEnvironment(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_XCODE)
-	assertError(t, err, "Expected error for Xcode environment")
+	assert.Error(err, "Expected error for Xcode environment")
 }
 
 // Test APIClient: HTTP Client Error
 func TestAPIClient_HTTPClientError(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "GET", "https://local-testing-base-url/inApps/v1/transactions/1234", nil, nil, 0)
 	client.httpClient.(*MockHTTPClient).err = errors.New("network error")
 
 	_, err := client.GetTransactionInfo("1234")
-	assertError(t, err, "Expected error for network error")
-	assertEqual(t, "network error", err.Error(), "Error message")
+	assert.Error(err, "Expected error for network error")
+	assert.Equal("network error", err.Error(), "Error message")
 }
 
 // Test APIClient: Invalid JSON Error Response
 func TestAPIClient_InvalidJSONErrorResponse(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "GET", "https://local-testing-base-url/inApps/v1/transactions/1234", nil, nil, 400)
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("invalid json")
 
 	_, err := client.GetTransactionInfo("1234")
-	assertError(t, err, "Expected error for invalid JSON error response")
+	assert.Error(err, "Expected error for invalid JSON error response")
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertTrue(t, strings.Contains(apiErr.ErrorMessage, "failed to decode error response"), "ErrorMessage contains decode failure")
+	assert.True(ok, "Expected APIException")
+	assert.True(strings.Contains(apiErr.ErrorMessage, "failed to decode error response"), "ErrorMessage contains decode failure")
 }
 
 // Test UploadMessage with image
 func TestUploadMessage_WithImage(t *testing.T) {
+	assert := assert.New(t)
 	expectedBody := map[string]any{
 		"header": "Hello",
 		"body":   "World",
@@ -1001,45 +1048,49 @@ func TestUploadMessage_WithImage(t *testing.T) {
 	}
 
 	err := client.UploadMessage("msg_123", request)
-	assertNoError(t, err, "UploadMessage failed")
+	assert.NoError(err, "UploadMessage failed")
 }
 
 // Test UploadImage: Error path
 func TestUploadImage_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "PUT", "https://local-testing-base-url/inApps/v1/messaging/image/img_123", nil, nil, 500)
 	client.httpClient.(*MockHTTPClient).expectedBinaryData = []byte("fake-image-data")
 	client.httpClient.(*MockHTTPClient).expectedContentType = "image/png"
 
 	err := client.UploadImage("img_123", []byte("fake-image-data"))
-	assertError(t, err, "Expected error for UploadImage")
+	assert.Error(err, "Expected error for UploadImage")
 
 	apiErr, ok := err.(*APIException)
-	assertTrue(t, ok, "Expected APIException")
-	assertEqual(t, 500, apiErr.HTTPStatusCode, "HTTPStatusCode")
+	assert.True(ok, "Expected APIException")
+	assert.Equal(500, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
 // Test makeRequest: Marshal error
 func TestMakeRequest_MarshalError(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 	client, _ := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
 	// Passing a channel to json.Marshal will cause an error
 	err := client.makeRequest("POST", "/test", nil, make(chan int), nil)
-	assertError(t, err, "Expected error for JSON marshal failure")
+	assert.Error(err, "Expected error for JSON marshal failure")
 }
 
 // Test NewAPIClient: Standard Environments
 func TestNewAPIClient_Environments(t *testing.T) {
+	assert := assert.New(t)
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 
 	pClient, _ := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_PRODUCTION)
-	assertEqual(t, "https://api.storekit.itunes.apple.com", pClient.baseURL, "Production URL")
+	assert.Equal("https://api.storekit.itunes.apple.com", pClient.baseURL, "Production URL")
 
 	sClient, _ := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_SANDBOX)
-	assertEqual(t, "https://api.storekit-sandbox.itunes.apple.com", sClient.baseURL, "Sandbox URL")
+	assert.Equal("https://api.storekit-sandbox.itunes.apple.com", sClient.baseURL, "Sandbox URL")
 }
 
 // Test internal method: makeRequestWithBinaryBody with destination
 func TestMakeRequestWithBinaryBody_WithDestination(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "", "PUT", "https://local-testing-base-url/test", nil, nil, 200)
 	client.httpClient.(*MockHTTPClient).responseBody = []byte(`{"revision":"rev1"}`)
 
@@ -1048,104 +1099,117 @@ func TestMakeRequestWithBinaryBody_WithDestination(t *testing.T) {
 	}
 	err := client.makeRequestWithBinaryBody("PUT", "/test", nil, []byte("body"), "text/plain", &response)
 	if err != nil {
-		assertNoError(t, err, "makeRequestWithBinaryBody failed")
+		assert.NoError(err, "makeRequestWithBinaryBody failed")
 	}
-	assertEqual(t, "rev1", response.Revision, "Revision")
+	assert.Equal("rev1", response.Revision, "Revision")
 }
 
 // Test LookUpOrderID: Error path
 func TestLookUpOrderID_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/lookup/order123", nil, nil, 404)
 	_, err := client.LookUpOrderID("order123")
-	assertError(t, err, "Expected error for LookUpOrderID")
+	assert.Error(err, "Expected error for LookUpOrderID")
 }
 
 // Test RequestTestNotification: Error path
 func TestRequestTestNotification_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/test", nil, nil, 500)
 	_, err := client.RequestTestNotification()
-	assertError(t, err, "Expected error for RequestTestNotification")
+	assert.Error(err, "Expected error for RequestTestNotification")
 }
 
 // Test GetImageList: Error path
 func TestGetImageList_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/image/list", nil, nil, 500)
 	_, err := client.GetImageList()
-	assertError(t, err, "Expected error for GetImageList")
+	assert.Error(err, "Expected error for GetImageList")
 }
 
 // Test GetMessageList: Error path
 func TestGetMessageList_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/message/list", nil, nil, 500)
 	_, err := client.GetMessageList()
-	assertError(t, err, "Expected error for GetMessageList")
+	assert.Error(err, "Expected error for GetMessageList")
 }
 
 // Test ExtendRenewalDateForAllActiveSubscribers: Error path
 func TestExtendRenewalDateForAllActiveSubscribers_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", nil, nil, 400)
 	request := MassExtendRenewalDateRequest{}
 	_, err := client.ExtendRenewalDateForAllActiveSubscribers(request)
-	assertError(t, err, "Expected error for ExtendRenewalDateForAllActiveSubscribers")
+	assert.Error(err, "Expected error for ExtendRenewalDateForAllActiveSubscribers")
 }
 
 // Test ExtendSubscriptionRenewalDate: Error path
 func TestExtendSubscriptionRenewalDate_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "PUT", "https://local-testing-base-url/inApps/v1/subscriptions/extend/tx123", nil, nil, 400)
 	request := ExtendRenewalDateRequest{}
 	_, err := client.ExtendSubscriptionRenewalDate("tx123", request)
-	assertError(t, err, "Expected error for ExtendSubscriptionRenewalDate")
+	assert.Error(err, "Expected error for ExtendSubscriptionRenewalDate")
 }
 
 // Test GetStatusOfSubscriptionRenewalDateExtensions: Error path
 func TestGetStatusOfSubscriptionRenewalDateExtensions_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/subscriptions/extend/mass/req123/prod123", nil, nil, 404)
 	_, err := client.GetStatusOfSubscriptionRenewalDateExtensions("req123", "prod123")
-	assertError(t, err, "Expected error for GetStatusOfSubscriptionRenewalDateExtensions")
+	assert.Error(err, "Expected error for GetStatusOfSubscriptionRenewalDateExtensions")
 }
 
 // Test GetTestNotificationStatus: Error path
 func TestGetTestNotificationStatus_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/notifications/test/token123", nil, nil, 404)
 	_, err := client.GetTestNotificationStatus("token123")
-	assertError(t, err, "Expected error for GetTestNotificationStatus")
+	assert.Error(err, "Expected error for GetTestNotificationStatus")
 }
 
 // Test GetTransactionHistory with revision
 func TestGetTransactionHistory_WithRevision(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "transactionHistoryResponse.json", "GET", "https://local-testing-base-url/inApps/v1/history/1234", map[string][]string{"revision": {"rev1"}}, nil, 200)
 	_, err := client.GetTransactionHistory("1234", url.Values{}, "rev1", GET_TRANSACTION_HISTORY_VERSION_V1)
-	assertNoError(t, err, "GetTransactionHistory failed")
+	assert.NoError(err, "GetTransactionHistory failed")
 }
 
 // Test GetRefundHistory with revision
 func TestGetRefundHistory_WithRevision(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "getRefundHistoryResponse.json", "GET", "https://local-testing-base-url/inApps/v2/refund/lookup/1234", map[string][]string{"revision": {"rev1"}}, nil, 200)
 	_, err := client.GetRefundHistory("1234", "rev1")
-	assertNoError(t, err, "GetRefundHistory failed")
+	assert.NoError(err, "GetRefundHistory failed")
 }
 
 // Test GetNotificationHistory with pagination token
 func TestGetNotificationHistory_WithToken(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "getNotificationHistoryResponse.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/history", map[string][]string{"paginationToken": {"token1"}}, nil, 200)
 	request := NotificationHistoryRequest{}
 	_, err := client.GetNotificationHistory("token1", request)
-	assertNoError(t, err, "GetNotificationHistory failed")
+	assert.NoError(err, "GetNotificationHistory failed")
 }
 
 // Test GetRefundHistory: Error path
 func TestGetRefundHistory_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v2/refund/lookup/1234", nil, nil, 404)
 	_, err := client.GetRefundHistory("1234", "")
-	assertError(t, err, "Expected error for GetRefundHistory")
+	assert.Error(err, "Expected error for GetRefundHistory")
 }
 
 // Test GetNotificationHistory: Error path
 func TestGetNotificationHistory_Error(t *testing.T) {
+	assert := assert.New(t)
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/history", nil, nil, 500)
 	request := NotificationHistoryRequest{}
 	_, err := client.GetNotificationHistory("", request)
-	assertError(t, err, "Expected error for GetNotificationHistory")
+	assert.Error(err, "Expected error for GetNotificationHistory")
 }
 
 // Helper functions

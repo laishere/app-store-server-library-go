@@ -2,19 +2,21 @@ package appstore
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestAppDataDeserialization(t *testing.T) {
+	assert := assert.New(t)
 	jsonData, err := readTestData("models/appData.json")
-	assertNoError(t, err, "Failed to read test data")
+	assert.NoError(err, "Failed to read test data")
 
 	var appData AppData
 	err = json.Unmarshal(jsonData, &appData)
-	assertNoError(t, err, "Failed to unmarshal AppData")
+	assert.NoError(err, "Failed to unmarshal AppData")
 
-	assertEqual(t, int64(987654321), appData.AppAppleId, "AppAppleId")
-	assertEqual(t, "com.example", appData.BundleId, "BundleId")
-	assertEqual(t, ENVIRONMENT_SANDBOX, appData.Environment, "Environment")
-	assertEqual(t, "signed-app-transaction-info", appData.SignedAppTransactionInfo, "SignedAppTransactionInfo")
+	assert.Equal(int64(987654321), appData.AppAppleId, "AppAppleId")
+	assert.Equal("com.example", appData.BundleId, "BundleId")
+	assert.Equal(ENVIRONMENT_SANDBOX, appData.Environment, "Environment")
+	assert.Equal("signed-app-transaction-info", appData.SignedAppTransactionInfo, "SignedAppTransactionInfo")
 }

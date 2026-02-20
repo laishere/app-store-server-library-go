@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
@@ -43,9 +44,10 @@ func parsePublicKey(pemStr string) (*ecdsa.PublicKey, error) {
 }
 
 func TestValidChainWithoutOCSP(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		LEAF_CERT_BASE64_ENCODED,
@@ -54,17 +56,18 @@ func TestValidChainWithoutOCSP(t *testing.T) {
 	}
 
 	pubKey, err := cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertNoError(t, err, "Expected no error")
+	assert.NoError(err, "Expected no error")
 	expectedPubKey, err := parsePublicKey(LEAF_CERT_PUBLIC_KEY)
-	assertNoError(t, err, "Failed to parse expected public key")
-	assertEqual(t, 0, expectedPubKey.X.Cmp(pubKey.X), "Public Key X")
-	assertEqual(t, 0, expectedPubKey.Y.Cmp(pubKey.Y), "Public Key Y")
+	assert.NoError(err, "Failed to parse expected public key")
+	assert.Equal(0, expectedPubKey.X.Cmp(pubKey.X), "Public Key X")
+	assert.Equal(0, expectedPubKey.Y.Cmp(pubKey.Y), "Public Key Y")
 }
 
 func TestValidChainInvalidIntermediateOIDWithoutOCSP(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		LEAF_CERT_FOR_INTERMEDIATE_CA_INVALID_OID_BASE64_ENCODED,
@@ -73,16 +76,17 @@ func TestValidChainInvalidIntermediateOIDWithoutOCSP(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error")
+	assert.Error(err, "Expected error")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertTrue(t, vErr.Status == VERIFICATION_FAILURE || vErr.Status == INVALID_CERTIFICATE, "Expected VERIFICATION_FAILURE or INVALID_CERTIFICATE status")
+	assert.True(ok, "Expected VerificationException")
+	assert.True(vErr.Status == VERIFICATION_FAILURE || vErr.Status == INVALID_CERTIFICATE, "Expected VERIFICATION_FAILURE or INVALID_CERTIFICATE status")
 }
 
 func TestValidChainInvalidLeafOIDWithoutOCSP(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		LEAF_CERT_INVALID_OID_BASE64_ENCODED,
@@ -91,16 +95,17 @@ func TestValidChainInvalidLeafOIDWithoutOCSP(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error")
+	assert.Error(err, "Expected error")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, VERIFICATION_FAILURE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(VERIFICATION_FAILURE, vErr.Status, "Verification error status")
 }
 
 func TestInvalidChainLength(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		INTERMEDIATE_CA_BASE64_ENCODED,
@@ -108,14 +113,15 @@ func TestInvalidChainLength(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error")
-	assertTrue(t, strings.Contains(err.Error(), "INVALID_CHAIN_LENGTH"), "Error message should contain INVALID_CHAIN_LENGTH")
+	assert.Error(err, "Expected error")
+	assert.True(strings.Contains(err.Error(), "INVALID_CHAIN_LENGTH"), "Error message should contain INVALID_CHAIN_LENGTH")
 }
 
 func TestInvalidBase64InCertificateList(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		"abc",
@@ -124,16 +130,17 @@ func TestInvalidBase64InCertificateList(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error")
+	assert.Error(err, "Expected error")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, INVALID_CERTIFICATE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(INVALID_CERTIFICATE, vErr.Status, "Verification error status")
 }
 
 func TestInvalidDataInCertificateList(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		base64.StdEncoding.EncodeToString([]byte("abc")),
@@ -142,25 +149,27 @@ func TestInvalidDataInCertificateList(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error")
+	assert.Error(err, "Expected error")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, INVALID_CERTIFICATE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(INVALID_CERTIFICATE, vErr.Status, "Verification error status")
 }
 
 func TestMalformedRootCert(t *testing.T) {
+	assert := assert.New(t)
 	malformedRoot := []byte("abc")
 	_, err := newChainVerifier([][]byte{malformedRoot})
-	assertError(t, err, "Expected error for malformed root during verifier creation")
+	assert.Error(err, "Expected error for malformed root during verifier creation")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, INVALID_CERTIFICATE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(INVALID_CERTIFICATE, vErr.Status, "Verification error status")
 }
 
 func TestChainDifferentThanRootCertificate(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(REAL_APPLE_ROOT_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		LEAF_CERT_BASE64_ENCODED,
@@ -169,16 +178,17 @@ func TestChainDifferentThanRootCertificate(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertError(t, err, "Expected error for mismatching root")
+	assert.Error(err, "Expected error for mismatching root")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, VERIFICATION_FAILURE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(VERIFICATION_FAILURE, vErr.Status, "Verification error status")
 }
 
 func TestValidExpiredChain(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		LEAF_CERT_BASE64_ENCODED,
@@ -187,20 +197,21 @@ func TestValidExpiredChain(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, false, time.Unix(2280946846, 0))
-	assertError(t, err, "Expected error for expired chain")
+	assert.Error(err, "Expected error for expired chain")
 	vErr, ok := err.(*VerificationException)
-	assertTrue(t, ok, "Expected VerificationException")
-	assertEqual(t, VERIFICATION_FAILURE, vErr.Status, "Verification error status")
+	assert.True(ok, "Expected VerificationException")
+	assert.Equal(VERIFICATION_FAILURE, vErr.Status, "Verification error status")
 }
 
 func TestAppleChainIsValidWithOCSP(t *testing.T) {
+	assert := assert.New(t)
 	if testing.Short() {
 		t.Skip("Skipping network test in short mode")
 	}
 
 	rootBytes, _ := base64.StdEncoding.DecodeString(REAL_APPLE_ROOT_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{
 		REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED,
@@ -209,13 +220,14 @@ func TestAppleChainIsValidWithOCSP(t *testing.T) {
 	}
 
 	_, err = cv.verifyChain(certs, true, time.Unix(int64(EFFECTIVE_DATE), 0))
-	assertNoError(t, err, "Expected no error for Apple chain with OCSP")
+	assert.NoError(err, "Expected no error for Apple chain with OCSP")
 }
 
 func TestOCSPResponseCaching(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{"cert1", "cert2", "cert3"}
 	cacheKey := "cert1|cert2|cert3"
@@ -229,14 +241,15 @@ func TestOCSPResponseCaching(t *testing.T) {
 	cv.cacheMutex.Unlock()
 
 	pubKey, err := cv.verifyChain(certs, true, time.Now())
-	assertNoError(t, err, "Expected no error from cache hit")
-	assertNil(t, pubKey, "Public Key")
+	assert.NoError(err, "Expected no error from cache hit")
+	assert.Nil(pubKey, "Public Key")
 }
 
 func TestOCSPResponseCachingHasExpiration(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	certs := []string{"cert1", "cert2", "cert3"}
 	cacheKey := "cert1|cert2|cert3"
@@ -251,13 +264,14 @@ func TestOCSPResponseCachingHasExpiration(t *testing.T) {
 
 	// Should miss cache and fail decoding
 	_, err = cv.verifyChain(certs, true, time.Now())
-	assertError(t, err, "Expected error for dummy certificates after cache expiration")
+	assert.Error(err, "Expected error for dummy certificates after cache expiration")
 }
 
 func TestOCSPCachingWithDifferentChain(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	chain1 := []string{"leaf1", "int1", "root1"}
 	chain2 := []string{"leaf2", "int2", "root2"}
@@ -271,17 +285,18 @@ func TestOCSPCachingWithDifferentChain(t *testing.T) {
 
 	// chain1 should hit cache
 	_, err = cv.verifyChain(chain1, true, time.Now())
-	assertNoError(t, err, "Expected no error for chain1 (cache hit)")
+	assert.NoError(err, "Expected no error for chain1 (cache hit)")
 
 	// chain2 should NOT hit cache and fail decoding
 	_, err = cv.verifyChain(chain2, true, time.Now())
-	assertError(t, err, "Expected error for chain2 (cache miss)")
+	assert.Error(err, "Expected error for chain2 (cache miss)")
 }
 
 func TestOCSPCachingWithSlightlyDifferentChain(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	chain1 := []string{"leaf1", "int1", "root1"}
 	chain2 := []string{"leaf1", "int1", "root2"} // Different root
@@ -295,17 +310,18 @@ func TestOCSPCachingWithSlightlyDifferentChain(t *testing.T) {
 
 	// chain1 should hit cache
 	_, err = cv.verifyChain(chain1, true, time.Now())
-	assertNoError(t, err, "Expected no error for chain1 (cache hit)")
+	assert.NoError(err, "Expected no error for chain1 (cache hit)")
 
 	// chain2 should NOT hit cache
 	_, err = cv.verifyChain(chain2, true, time.Now())
-	assertError(t, err, "Expected error for chain2 (cache miss)")
+	assert.Error(err, "Expected error for chain2 (cache miss)")
 }
 
 func TestCacheEviction(t *testing.T) {
+	assert := assert.New(t)
 	rootBytes, _ := base64.StdEncoding.DecodeString(ROOT_CA_BASE64_ENCODED)
 	cv, err := newChainVerifier([][]byte{rootBytes})
-	assertNoError(t, err, "Failed to create chain verifier")
+	assert.NoError(err, "Failed to create chain verifier")
 
 	// 1. Fill cache to max capacity
 	for i := range maxCacheSize {
@@ -319,16 +335,16 @@ func TestCacheEviction(t *testing.T) {
 		cv.cacheMutex.Unlock()
 	}
 
-	assertEqual(t, maxCacheSize, len(cv.cache), "Setup cache size")
+	assert.Equal(maxCacheSize, len(cv.cache), "Setup cache size")
 
 	// 2. Add one more item - should trigger eviction of a RANDOM item since none are expired
 	newItemKey := "new_item_1"
 	cv.saveToCache(newItemKey, nil)
 
 	cv.cacheMutex.RLock()
-	assertEqual(t, maxCacheSize, len(cv.cache), "Eviction failed: cache size")
+	assert.Equal(maxCacheSize, len(cv.cache), "Eviction failed: cache size")
 	_, ok := cv.cache[newItemKey]
-	assertTrue(t, ok, "New item was not added to cache")
+	assert.True(ok, "New item was not added to cache")
 	cv.cacheMutex.RUnlock()
 
 	// 3. Test eviction of EXPIRED items
@@ -362,13 +378,13 @@ func TestCacheEviction(t *testing.T) {
 	// Verify cache size: half were expired/removed (no forced eviction needed).
 	// We added one new item, so expected size = (max / 2) + 1.
 	expectedSize := (maxCacheSize - (maxCacheSize / 2)) + 1
-	assertEqual(t, expectedSize, len(cv.cache), "Expired eviction failed: expected size roughly")
+	assert.Equal(expectedSize, len(cv.cache), "Expired eviction failed: expected size roughly")
 	_, ok = cv.cache[newItemKey2]
-	assertTrue(t, ok, "New item 2 was not added to cache")
+	assert.True(ok, "New item 2 was not added to cache")
 
 	// Verify no expired items remain
 	for k, v := range cv.cache {
-		assertTrue(t, !time.Now().After(v.expiry), "Found expired item in cache: "+k)
+		assert.True(!time.Now().After(v.expiry), "Found expired item in cache: "+k)
 	}
 	cv.cacheMutex.RUnlock()
 }

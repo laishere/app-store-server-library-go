@@ -31,3 +31,5 @@ linters:
         - diagnostic
         - style
         - performance
+      disabled-checks:
+        - importShadow

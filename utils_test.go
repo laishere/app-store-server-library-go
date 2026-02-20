@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"reflect"
-	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -105,72 +103,7 @@ func decodeJWTWithoutVerification(tokenString string) (header, payload map[strin
 	return header, payload, nil
 }
 
-// int64Ptr returns a pointer to an int64 value
-func int64Ptr(v int64) *int64 {
+// ptr returns a pointer to the given value
+func ptr[T any](v T) *T {
 	return &v
-}
-
-// stringPtr returns a pointer to a string value
-func stringPtr(v string) *string {
-	return &v
-}
-
-// assertEqual is a helper function for assertions in tests
-func assertEqual(t *testing.T, expected, actual any, fieldName string) {
-	t.Helper()
-	if expected != actual {
-		t.Errorf("%s: expected %v, got %v", fieldName, expected, actual)
-	}
-}
-
-// assertNoError is a helper function to assert that an error is nil
-func assertNoError(t *testing.T, err error, message string) {
-	t.Helper()
-	if err != nil {
-		t.Fatalf("%s: unexpected error: %v", message, err)
-	}
-}
-
-// assertError is a helper function to assert that an error is not nil
-func assertError(t *testing.T, err error, message string) {
-	t.Helper()
-	if err == nil {
-		t.Fatalf("%s: expected error, got nil", message)
-	}
-}
-
-// assertTrue is a helper function to assert that a value is true
-func assertTrue(t *testing.T, actual bool, fieldName string) {
-	t.Helper()
-	if !actual {
-		t.Errorf("%s: expected true, got false", fieldName)
-	}
-}
-
-// assertNil is a helper function to assert that a value is nil
-func assertNil(t *testing.T, actual any, fieldName string) {
-	t.Helper()
-	if !isNil(actual) {
-		t.Errorf("%s: expected nil, got %v", fieldName, actual)
-	}
-}
-
-// assertNotNil is a helper function to assert that a value is not nil
-func assertNotNil(t *testing.T, actual any, fieldName string) {
-	t.Helper()
-	if isNil(actual) {
-		t.Fatalf("%s: expected not nil, got nil", fieldName)
-	}
-}
-
-func isNil(i any) bool {
-	if i == nil {
-		return true
-	}
-	v := reflect.ValueOf(i)
-	switch v.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
-		return v.IsNil()
-	}
-	return false
 }
