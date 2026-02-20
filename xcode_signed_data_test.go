@@ -9,19 +9,13 @@ const XCODE_BUNDLE_ID = "com.example.naturelab.backyardbirds.example"
 // Test Xcode signed app transaction
 func TestXcodeSignedAppTransaction(t *testing.T) {
 	verifier, err := createTestSignedDataVerifier(ENVIRONMENT_XCODE, XCODE_BUNDLE_ID, nil)
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	encodedAppTransaction, err := readTestDataString("xcode/xcode-signed-app-transaction")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	appTransaction, err := verifier.VerifyAndDecodeAppTransaction(encodedAppTransaction)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode app transaction: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode app transaction")
 
 	assertNotNil(t, appTransaction, "AppTransaction")
 	assertNil(t, appTransaction.AppAppleId, "AppAppleId")
@@ -39,19 +33,13 @@ func TestXcodeSignedAppTransaction(t *testing.T) {
 // Test Xcode signed transaction
 func TestXcodeSignedTransaction(t *testing.T) {
 	verifier, err := createTestSignedDataVerifier(ENVIRONMENT_XCODE, XCODE_BUNDLE_ID, nil)
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	encodedTransaction, err := readTestDataString("xcode/xcode-signed-transaction")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	transaction, err := verifier.VerifyAndDecodeSignedTransaction(encodedTransaction)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode transaction: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode transaction")
 
 	assertEqual(t, "0", transaction.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "0", transaction.TransactionId, "TransactionId")
@@ -81,19 +69,13 @@ func TestXcodeSignedTransaction(t *testing.T) {
 // Test Xcode signed renewal info
 func TestXcodeSignedRenewalInfo(t *testing.T) {
 	verifier, err := createTestSignedDataVerifier(ENVIRONMENT_XCODE, XCODE_BUNDLE_ID, nil)
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	encodedRenewalInfo, err := readTestDataString("xcode/xcode-signed-renewal-info")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	renewalInfo, err := verifier.VerifyAndDecodeRenewalInfo(encodedRenewalInfo)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode renewal info: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode renewal info")
 
 	assertNil(t, renewalInfo.ExpirationIntent, "ExpirationIntent")
 	assertEqual(t, "0", renewalInfo.OriginalTransactionId, "OriginalTransactionId")
@@ -114,24 +96,16 @@ func TestXcodeSignedRenewalInfo(t *testing.T) {
 // Test Xcode signed app transaction with production environment should fail
 func TestXcodeSignedAppTransactionWithProductionEnvironment(t *testing.T) {
 	verifier, err := createTestSignedDataVerifier(ENVIRONMENT_PRODUCTION, XCODE_BUNDLE_ID, int64Ptr(1234))
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	encodedAppTransaction, err := readTestDataString("xcode/xcode-signed-app-transaction")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	_, err = verifier.VerifyAndDecodeAppTransaction(encodedAppTransaction)
-	if err == nil {
-		t.Fatal("Expected verification to fail with wrong environment")
-	}
+	assertError(t, err, "Expected verification to fail with wrong environment")
 
 	// Just verify it's a VerificationException - the specific status may vary
 	// depending on whether chain verification fails first or environment check fails first
 	_, ok := err.(*VerificationException)
-	if !ok {
-		t.Fatalf("Expected VerificationException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected VerificationException")
 }

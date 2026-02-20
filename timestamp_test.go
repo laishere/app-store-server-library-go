@@ -73,10 +73,11 @@ func TestTimestamp_UnmarshalJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var ts Timestamp
 			err := json.Unmarshal([]byte(tt.input), &ts)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Timestamp.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assertError(t, err, "Timestamp.UnmarshalJSON()")
 				return
 			}
+			assertNoError(t, err, "Timestamp.UnmarshalJSON()")
 			assertEqual(t, tt.want, ts, "Timestamp.UnmarshalJSON()")
 		})
 	}
@@ -124,7 +125,5 @@ func TestTimestamp_String(t *testing.T) {
 func TestTimestamp_UnmarshalJSON_DirectError(t *testing.T) {
 	var ts Timestamp
 	err := ts.UnmarshalJSON([]byte("{"))
-	if err == nil {
-		t.Error("expected error for invalid json when calling UnmarshalJSON directly")
-	}
+	assertError(t, err, "Timestamp.UnmarshalJSON() for invalid json")
 }

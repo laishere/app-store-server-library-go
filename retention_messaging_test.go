@@ -15,29 +15,21 @@ func TestRealtimeResponseBodyWithMessage(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(responseBody)
-	if err != nil {
-		t.Fatalf("Failed to marshal response: %v", err)
-	}
+	assertNoError(t, err, "Failed to marshal response")
 
 	var jsonDict map[string]any
-	if err := json.Unmarshal(jsonData, &jsonDict); err != nil {
-		t.Fatalf("Failed to unmarshal to dict: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &jsonDict)
+	assertNoError(t, err, "Failed to unmarshal to dict")
 
-	if _, ok := jsonDict["message"]; !ok {
-		t.Error("message should be in jsonDict")
-	}
+	assertNotNil(t, jsonDict["message"], "message in jsonDict")
 	msg := jsonDict["message"].(map[string]any)
 	assertEqual(t, messageId, msg["messageIdentifier"], "messageIdentifier")
 
 	var deserialized RealtimeResponseBody
-	if err := json.Unmarshal(jsonData, &deserialized); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &deserialized)
+	assertNoError(t, err, "Failed to deserialize")
 
-	if deserialized.Message == nil {
-		t.Fatal("Message should not be nil")
-	}
+	assertNotNil(t, deserialized.Message, "Message")
 	assertEqual(t, messageId, *deserialized.Message.MessageIdentifier, "MessageIdentifier")
 }
 
@@ -53,30 +45,22 @@ func TestRealtimeResponseBodyWithAlternateProduct(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(responseBody)
-	if err != nil {
-		t.Fatalf("Failed to marshal: %v", err)
-	}
+	assertNoError(t, err, "Failed to marshal")
 
 	var jsonDict map[string]any
-	if err := json.Unmarshal(jsonData, &jsonDict); err != nil {
-		t.Fatalf("Failed to unmarshal to dict: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &jsonDict)
+	assertNoError(t, err, "Failed to unmarshal to dict")
 
-	if _, ok := jsonDict["alternateProduct"]; !ok {
-		t.Error("alternateProduct should be in jsonDict")
-	}
+	assertNotNil(t, jsonDict["alternateProduct"], "alternateProduct in jsonDict")
 	alt := jsonDict["alternateProduct"].(map[string]any)
 	assertEqual(t, messageId, alt["messageIdentifier"], "messageIdentifier")
 	assertEqual(t, productId, alt["productId"], "productId")
 
 	var deserialized RealtimeResponseBody
-	if err := json.Unmarshal(jsonData, &deserialized); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &deserialized)
+	assertNoError(t, err, "Failed to deserialize")
 
-	if deserialized.AlternateProduct == nil {
-		t.Fatal("AlternateProduct should not be nil")
-	}
+	assertNotNil(t, deserialized.AlternateProduct, "AlternateProduct")
 	assertEqual(t, messageId, *deserialized.AlternateProduct.MessageIdentifier, "MessageIdentifier")
 	assertEqual(t, productId, *deserialized.AlternateProduct.ProductId, "ProductId")
 }
@@ -93,30 +77,22 @@ func TestRealtimeResponseBodyWithPromotionalOfferV2(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(responseBody)
-	if err != nil {
-		t.Fatalf("Failed to marshal: %v", err)
-	}
+	assertNoError(t, err, "Failed to marshal")
 
 	var jsonDict map[string]any
-	if err := json.Unmarshal(jsonData, &jsonDict); err != nil {
-		t.Fatalf("Failed to unmarshal to dict: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &jsonDict)
+	assertNoError(t, err, "Failed to unmarshal to dict")
 
-	if _, ok := jsonDict["promotionalOffer"]; !ok {
-		t.Error("promotionalOffer should be in jsonDict")
-	}
+	assertNotNil(t, jsonDict["promotionalOffer"], "promotionalOffer in jsonDict")
 	offer := jsonDict["promotionalOffer"].(map[string]any)
 	assertEqual(t, messageId, offer["messageIdentifier"], "messageIdentifier")
 	assertEqual(t, signatureV2, offer["promotionalOfferSignatureV2"], "promotionalOfferSignatureV2")
 
 	var deserialized RealtimeResponseBody
-	if err := json.Unmarshal(jsonData, &deserialized); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &deserialized)
+	assertNoError(t, err, "Failed to deserialize")
 
-	if deserialized.PromotionalOffer == nil {
-		t.Fatal("PromotionalOffer should not be nil")
-	}
+	assertNotNil(t, deserialized.PromotionalOffer, "PromotionalOffer")
 	assertEqual(t, messageId, *deserialized.PromotionalOffer.MessageIdentifier, "MessageIdentifier")
 	assertEqual(t, signatureV2, *deserialized.PromotionalOffer.PromotionalOfferSignatureV2, "PromotionalOfferSignatureV2")
 }
@@ -150,18 +126,13 @@ func TestRealtimeResponseBodyWithPromotionalOfferV1(t *testing.T) {
 	}
 
 	jsonData, err := json.Marshal(responseBody)
-	if err != nil {
-		t.Fatalf("Failed to marshal: %v", err)
-	}
+	assertNoError(t, err, "Failed to marshal")
 
 	var deserialized RealtimeResponseBody
-	if err := json.Unmarshal(jsonData, &deserialized); err != nil {
-		t.Fatalf("Failed to deserialize: %v", err)
-	}
+	err = json.Unmarshal(jsonData, &deserialized)
+	assertNoError(t, err, "Failed to deserialize")
 
-	if deserialized.PromotionalOffer == nil {
-		t.Fatal("PromotionalOffer should not be nil")
-	}
+	assertNotNil(t, deserialized.PromotionalOffer, "PromotionalOffer")
 	v1 := deserialized.PromotionalOffer.PromotionalOfferSignatureV1
 	assertEqual(t, productId, *v1.ProductId, "ProductId")
 	assertEqual(t, offerId, *v1.OfferIdentifier, "OfferIdentifier")

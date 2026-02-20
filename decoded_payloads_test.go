@@ -12,19 +12,13 @@ func createDefaultTestSignedDataVerifier() (*SignedDataVerifier, error) {
 // Test app transaction decoding
 func TestVerifyAndDecodeAppTransaction(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedAppTransaction, err := createSignedDataFromJSON("models/appTransaction.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	appTransaction, err := verifier.VerifyAndDecodeAppTransaction(signedAppTransaction)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode app transaction: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode app transaction")
 
 	// Verify fields
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, appTransaction.ReceiptType, "ReceiptType")
@@ -43,19 +37,13 @@ func TestVerifyAndDecodeAppTransaction(t *testing.T) {
 // Test transaction decoding
 func TestVerifyAndDecodeSignedTransaction(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedTransaction, err := createSignedDataFromJSON("models/signedTransaction.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	transaction, err := verifier.VerifyAndDecodeSignedTransaction(signedTransaction)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode transaction: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode transaction")
 
 	assertEqual(t, "12345", transaction.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "23456", transaction.TransactionId, "TransactionId")
@@ -88,19 +76,13 @@ func TestVerifyAndDecodeSignedTransaction(t *testing.T) {
 // Test transaction with revocation
 func TestVerifyAndDecodeSignedTransactionWithRevocation(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedTransaction, err := createSignedDataFromJSON("models/signedTransactionWithRevocation.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	transaction, err := verifier.VerifyAndDecodeSignedTransaction(signedTransaction)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode transaction: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode transaction")
 
 	// Verify revocation fields
 	assertEqual(t, REVOCATION_TYPE_REFUND_PRORATED, transaction.RevocationType, "RevocationType")
@@ -110,19 +92,13 @@ func TestVerifyAndDecodeSignedTransactionWithRevocation(t *testing.T) {
 // Test renewal info decoding
 func TestVerifyAndDecodeRenewalInfo(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedRenewalInfo, err := createSignedDataFromJSON("models/signedRenewalInfo.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	renewalInfo, err := verifier.VerifyAndDecodeRenewalInfo(signedRenewalInfo)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode renewal info: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode renewal info")
 
 	// Verify all fields
 	assertEqual(t, EXPIRATION_INTENT_CUSTOMER_CANCELLED, *renewalInfo.ExpirationIntent, "ExpirationIntent")
@@ -147,19 +123,13 @@ func TestVerifyAndDecodeRenewalInfo(t *testing.T) {
 // Test notification decoding (SUBSCRIBED type)
 func TestVerifyAndDecodeNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedNotification, err := createSignedDataFromJSON("models/signedNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	// Verify notification fields
 	assertEqual(t, NOTIFICATION_TYPE_SUBSCRIBED, notification.NotificationType, "NotificationType")
@@ -186,19 +156,13 @@ func TestVerifyAndDecodeNotification(t *testing.T) {
 // Test consumption request notification
 func TestVerifyAndDecodeConsumptionRequestNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedNotification, err := createSignedDataFromJSON("models/signedConsumptionRequestNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	assertEqual(t, NOTIFICATION_TYPE_CONSUMPTION_REQUEST, notification.NotificationType, "NotificationType")
 
@@ -209,19 +173,13 @@ func TestVerifyAndDecodeConsumptionRequestNotification(t *testing.T) {
 // Test summary notification
 func TestVerifyAndDecodeSummaryNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedNotification, err := createSignedDataFromJSON("models/signedSummaryNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	assertEqual(t, NOTIFICATION_TYPE_RENEWAL_EXTENSION, notification.NotificationType, "NotificationType")
 	assertNotNil(t, notification.Subtype, "Subtype")
@@ -240,20 +198,14 @@ func TestVerifyAndDecodeSummaryNotification(t *testing.T) {
 
 func TestVerifyAndDecodeExternalPurchaseTokenNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 	verifier.allowAnyEnvironment = true
 
 	signedExternalPurchaseTokenNotification, err := createSignedDataFromJSON("models/signedExternalPurchaseTokenNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedExternalPurchaseTokenNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	assertEqual(t, NOTIFICATION_TYPE_EXTERNAL_PURCHASE_TOKEN_NOTIFICATION, notification.NotificationType, "NotificationType")
 	assertNotNil(t, notification.Subtype, "Subtype")
@@ -274,20 +226,14 @@ func TestVerifyAndDecodeExternalPurchaseTokenNotification(t *testing.T) {
 
 func TestVerifyAndDecodeExternalPurchaseTokenSandboxNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 	verifier.allowAnyEnvironment = true
 
 	signedExternalPurchaseTokenNotification, err := createSignedDataFromJSON("models/signedExternalPurchaseTokenSandboxNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedExternalPurchaseTokenNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	assertEqual(t, NOTIFICATION_TYPE_EXTERNAL_PURCHASE_TOKEN_NOTIFICATION, notification.NotificationType, "NotificationType")
 	assertNotNil(t, notification.Subtype, "Subtype")
@@ -309,19 +255,13 @@ func TestVerifyAndDecodeExternalPurchaseTokenSandboxNotification(t *testing.T) {
 // Test rescind consent notification
 func TestVerifyAndDecodeRescindConsentNotification(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedNotification, err := createSignedDataFromJSON("models/signedRescindConsentNotification.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	notification, err := verifier.VerifyAndDecodeNotification(signedNotification)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode notification: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode notification")
 
 	// Verify notification type
 	assertEqual(t, NOTIFICATION_TYPE_RESCIND_CONSENT, notification.NotificationType, "NotificationType")
@@ -346,19 +286,13 @@ func TestVerifyAndDecodeRescindConsentNotification(t *testing.T) {
 // Test realtime request decoding
 func TestVerifyAndDecodeRealtimeRequest(t *testing.T) {
 	verifier, err := createDefaultTestSignedDataVerifier()
-	if err != nil {
-		t.Fatalf("Failed to create verifier: %v", err)
-	}
+	assertNoError(t, err, "Failed to create verifier")
 
 	signedRealtimeRequest, err := createSignedDataFromJSON("models/decodedRealtimeRequest.json")
-	if err != nil {
-		t.Fatalf("Failed to create signed data: %v", err)
-	}
+	assertNoError(t, err, "Failed to create signed data")
 
 	request, err := verifier.VerifyAndDecodeRealtimeRequest(signedRealtimeRequest)
-	if err != nil {
-		t.Fatalf("Failed to verify and decode realtime request: %v", err)
-	}
+	assertNoError(t, err, "Failed to verify and decode realtime request")
 
 	// Verify fields - THIS TESTS DecodedRealtimeRequestBody unmarshal!
 	assertEqual(t, "99371282", request.OriginalTransactionId, "OriginalTransactionId")

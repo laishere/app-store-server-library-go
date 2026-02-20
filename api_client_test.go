@@ -27,92 +27,60 @@ type MockHTTPClient struct {
 }
 
 func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	// Validate HTTP method
-	if req.Method != m.expectedMethod {
-		m.t.Errorf("Expected method %s, got %s", m.expectedMethod, req.Method)
-	}
+	assertEqual(m.t, m.expectedMethod, req.Method, "HTTP method")
 
 	// Validate URL
-	if req.URL.String() != m.expectedURL {
-		// Parse both URLs to compare without query params
-		expectedParsed, _ := url.Parse(m.expectedURL)
-		actualParsed := req.URL
+	expectedParsed, _ := url.Parse(m.expectedURL)
+	actualParsed := req.URL
 
-		expectedBase := fmt.Sprintf("%s://%s%s", expectedParsed.Scheme, expectedParsed.Host, expectedParsed.Path)
-		actualBase := fmt.Sprintf("%s://%s%s", actualParsed.Scheme, actualParsed.Host, actualParsed.Path)
+	expectedBase := fmt.Sprintf("%s://%s%s", expectedParsed.Scheme, expectedParsed.Host, expectedParsed.Path)
+	actualBase := fmt.Sprintf("%s://%s%s", actualParsed.Scheme, actualParsed.Host, actualParsed.Path)
 
-		if expectedBase != actualBase {
-			m.t.Errorf("Expected URL %s, got %s", m.expectedURL, req.URL.String())
-		}
-	}
+	assertEqual(m.t, expectedBase, actualBase, "URL base")
 
 	// Validate query parameters
 	if len(m.expectedParams) > 0 {
 		actualParams := req.URL.Query()
 		for key, expectedVals := range m.expectedParams {
 			actualVals := actualParams[key]
-			if len(actualVals) != len(expectedVals) {
-				m.t.Errorf("Param %s: expected %d values, got %d", key, len(expectedVals), len(actualVals))
-			}
+			assertEqual(m.t, len(expectedVals), len(actualVals), "Param "+key+" values count")
 			for i, expectedVal := range expectedVals {
-				if i < len(actualVals) && actualVals[i] != expectedVal {
-					m.t.Errorf("Param %s[%d]: expected %s, got %s", key, i, expectedVal, actualVals[i])
+				if i < len(actualVals) {
+					assertEqual(m.t, expectedVal, actualVals[i], "Param "+key+" value")
 				}
 			}
 		}
 	}
 
 	// Validate headers
-	if !strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library/go") {
-		m.t.Errorf("Invalid User-Agent: %s", req.Header.Get("User-Agent"))
-	}
-	if req.Header.Get("Accept") != "application/json" {
-		m.t.Errorf("Expected Accept: application/json, got %s", req.Header.Get("Accept"))
-	}
+	assertTrue(m.t, strings.HasPrefix(req.Header.Get("User-Agent"), "app-store-server-library/go"), "User-Agent header")
+	assertEqual(m.t, "application/json", req.Header.Get("Accept"), "Accept header")
 
 	// Validate and decode JWT token
 	authHeader := req.Header.Get("Authorization")
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		m.t.Errorf("Invalid Authorization header: %s", authHeader)
-	} else {
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		header, payload, err := decodeJWTWithoutVerification(tokenString)
-		if err != nil {
-			m.t.Errorf("Failed to decode JWT: %v", err)
-		} else {
-			// Validate JWT claims
-			if payload["aud"] != "appstoreconnect-v1" {
-				m.t.Errorf("JWT aud: expected appstoreconnect-v1, got %v", payload["aud"])
-			}
-			if payload["iss"] != "issuerId" {
-				m.t.Errorf("JWT iss: expected issuerId, got %v", payload["iss"])
-			}
-			if payload["bid"] != "com.example" {
-				m.t.Errorf("JWT bid: expected com.example, got %v", payload["bid"])
-			}
-			if header["kid"] != "keyId" {
-				m.t.Errorf("JWT kid: expected keyId, got %v", header["kid"])
-			}
-		}
-	}
+	assertTrue(m.t, strings.HasPrefix(authHeader, "Bearer "), "Authorization header")
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	header, payload, err := decodeJWTWithoutVerification(tokenString)
+	assertNoError(m.t, err, "Failed to decode JWT")
+
+	// Validate JWT claims
+	assertEqual(m.t, "appstoreconnect-v1", payload["aud"], "JWT aud")
+	assertEqual(m.t, "issuerId", payload["iss"], "JWT iss")
+	assertEqual(m.t, "com.example", payload["bid"], "JWT bid")
+	assertEqual(m.t, "keyId", header["kid"], "JWT kid")
 
 	// Validate request body
 	if m.expectedBinaryData != nil {
 		// Binary data validation
 		bodyBytes, _ := io.ReadAll(req.Body)
-		if !bytes.Equal(bodyBytes, m.expectedBinaryData) {
-			m.t.Errorf("Binary body mismatch")
-		}
-		if req.Header.Get("Content-Type") != m.expectedContentType {
-			m.t.Errorf("Expected Content-Type %s, got %s", m.expectedContentType, req.Header.Get("Content-Type"))
-		}
+		assertTrue(m.t, bytes.Equal(bodyBytes, m.expectedBinaryData), "Binary body mismatch")
+		assertEqual(m.t, m.expectedContentType, req.Header.Get("Content-Type"), "Content-Type header")
 	} else if m.expectedBody != nil {
 		// JSON body validation - only check that expected fields are present
 		var actualBody map[string]any
 		bodyBytes, _ := io.ReadAll(req.Body)
-		if err := json.Unmarshal(bodyBytes, &actualBody); err != nil {
-			m.t.Errorf("Failed to parse request body: %v", err)
-		}
+		err := json.Unmarshal(bodyBytes, &actualBody)
+		assertNoError(m.t, err, "Failed to parse request body")
 
 		// Convert expected body to map
 		expectedMap, ok := m.expectedBody.(map[string]any)
@@ -120,15 +88,12 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 			// Check that all expected fields exist with correct values
 			for key, expectedVal := range expectedMap {
 				actualVal, exists := actualBody[key]
-				if !exists {
-					m.t.Errorf("Missing expected field %s in body", key)
-				} else {
+				assertTrue(m.t, exists, "Missing expected field "+key+" in body")
+				if exists {
 					// Compare values
 					expJSON, _ := json.Marshal(expectedVal)
 					actJSON, _ := json.Marshal(actualVal)
-					if !bytes.Equal(expJSON, actJSON) {
-						m.t.Errorf("Field %s mismatch: expected %s, got %s", key, expJSON, actJSON)
-					}
+					assertTrue(m.t, bytes.Equal(expJSON, actJSON), "Field "+key+" mismatch")
 				}
 			}
 		}
@@ -158,9 +123,7 @@ func createMockAPIClient(t *testing.T, responseFile string, expectedMethod, expe
 
 	if responseFile != "" {
 		responseBody, err = readTestData(fmt.Sprintf("models/%s", responseFile))
-		if err != nil {
-			t.Fatalf("Failed to read response file %s: %v", responseFile, err)
-		}
+		assertNoError(t, err, "Failed to read response file")
 	} else {
 		// Empty response for 204 No Content
 		responseBody = []byte("{}")
@@ -177,15 +140,11 @@ func createMockAPIClient(t *testing.T, responseFile string, expectedMethod, expe
 	}
 
 	signingKey, err := readTestData("certs/testSigningKey.p8")
-	if err != nil {
-		t.Fatalf("Failed to read signing key: %v", err)
-	}
+	assertNoError(t, err, "Failed to read signing key")
 
 	client, err := NewAPIClientWithHTTPClient(signingKey, "keyId", "issuerId", "com.example",
 		ENVIRONMENT_LOCAL_TESTING, mockHTTP)
-	if err != nil {
-		t.Fatalf("Failed to create API client: %v", err)
-	}
+	assertNoError(t, err, "Failed to create API client")
 
 	return client
 }
@@ -216,16 +175,10 @@ func TestExtendRenewalDateForAllActiveSubscribers(t *testing.T) {
 	}
 
 	response, err := client.ExtendRenewalDateForAllActiveSubscribers(request)
-	if err != nil {
-		t.Fatalf("ExtendRenewalDateForAllActiveSubscribers failed: %v", err)
-	}
+	assertNoError(t, err, "ExtendRenewalDateForAllActiveSubscribers failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
-	if response.RequestIdentifier != "758883e8-151b-47b7-abd0-60c4d804c2f5" {
-		t.Errorf("Expected requestIdentifier 758883e8-151b-47b7-abd0-60c4d804c2f5, got %s", response.RequestIdentifier)
-	}
+	assertNotNil(t, response, "Response")
+	assertEqual(t, "758883e8-151b-47b7-abd0-60c4d804c2f5", response.RequestIdentifier, "requestIdentifier")
 }
 
 // Test ExtendSubscriptionRenewalDate
@@ -250,13 +203,9 @@ func TestExtendSubscriptionRenewalDate(t *testing.T) {
 	}
 
 	response, err := client.ExtendSubscriptionRenewalDate("4124214", request)
-	if err != nil {
-		t.Fatalf("ExtendSubscriptionRenewalDate failed: %v", err)
-	}
+	assertNoError(t, err, "ExtendSubscriptionRenewalDate failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "2312412", response.OriginalTransactionId, "OriginalTransactionId")
 	assertEqual(t, "9993", response.WebOrderLineItemId, "WebOrderLineItemId")
 	assertEqual(t, true, response.Success, "Success")
@@ -280,21 +229,15 @@ func TestGetAllSubscriptionStatuses(t *testing.T) {
 		STATUS_EXPIRED,
 		STATUS_ACTIVE,
 	})
-	if err != nil {
-		t.Fatalf("GetAllSubscriptionStatuses failed: %v", err)
-	}
+	assertNoError(t, err, "GetAllSubscriptionStatuses failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, ENVIRONMENT_LOCAL_TESTING, response.Environment, "Environment")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
 	assertEqual(t, int64(5454545), response.AppAppleId, "AppAppleId")
 
 	// Verify subscription group data
-	if len(response.Data) != 2 {
-		t.Fatalf("Expected 2 subscription groups, got %d", len(response.Data))
-	}
+	assertEqual(t, 2, len(response.Data), "Subscription groups length")
 }
 
 // Test GetRefundHistory
@@ -311,16 +254,10 @@ func TestGetRefundHistory(t *testing.T) {
 	)
 
 	response, err := client.GetRefundHistory("555555", "revision_input")
-	if err != nil {
-		t.Fatalf("GetRefundHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetRefundHistory failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
-	if len(response.SignedTransactions) != 2 {
-		t.Errorf("Expected 2 signed transactions, got %d", len(response.SignedTransactions))
-	}
+	assertNotNil(t, response, "Response")
+	assertEqual(t, 2, len(response.SignedTransactions), "SignedTransactions length")
 	assertEqual(t, "revision_output", response.Revision, "Revision")
 	assertEqual(t, true, response.HasMore, "HasMore")
 }
@@ -337,13 +274,9 @@ func TestGetStatusOfSubscriptionRenewalDateExtensions(t *testing.T) {
 	)
 
 	response, err := client.GetStatusOfSubscriptionRenewalDateExtensions("20fba8a0-2b80-4a7d-a17f-85c1854727f8", "com.example.product")
-	if err != nil {
-		t.Fatalf("GetStatusOfSubscriptionRenewalDateExtensions failed: %v", err)
-	}
+	assertNoError(t, err, "GetStatusOfSubscriptionRenewalDateExtensions failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "20fba8a0-2b80-4a7d-a17f-85c1854727f8", response.RequestIdentifier, "RequestIdentifier")
 	assertEqual(t, true, response.Complete, "Complete")
 	assertEqual(t, Timestamp(1698148900000), response.CompleteDate, "CompleteDate")
@@ -363,17 +296,11 @@ func TestGetTestNotificationStatus(t *testing.T) {
 	)
 
 	response, err := client.GetTestNotificationStatus("8cd2974c-f905-492a-bf9a-b2f47c791d19")
-	if err != nil {
-		t.Fatalf("GetTestNotificationStatus failed: %v", err)
-	}
+	assertNoError(t, err, "GetTestNotificationStatus failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "signed_payload", response.SignedPayload, "SignedPayload")
-	if len(response.SendAttempts) != 2 {
-		t.Errorf("Expected 2 send attempts, got %d", len(response.SendAttempts))
-	}
+	assertEqual(t, 2, len(response.SendAttempts), "SendAttempts length")
 }
 
 // Test GetNotificationHistory
@@ -406,18 +333,12 @@ func TestGetNotificationHistory(t *testing.T) {
 	}
 
 	response, err := client.GetNotificationHistory("a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request)
-	if err != nil {
-		t.Fatalf("GetNotificationHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetNotificationHistory failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "57715481-805a-4283-8499-1c19b5d6b20a", response.PaginationToken, "PaginationToken")
 	assertEqual(t, true, response.HasMore, "HasMore")
-	if len(response.NotificationHistory) != 2 {
-		t.Errorf("Expected 2 notification history items, got %d", len(response.NotificationHistory))
-	}
+	assertEqual(t, 2, len(response.NotificationHistory), "NotificationHistory length")
 }
 
 // Test GetTransactionHistoryV1
@@ -456,13 +377,9 @@ func TestGetTransactionHistoryV1(t *testing.T) {
 	queryParams.Set("revoked", "false")
 
 	response, err := client.GetTransactionHistory("1234", queryParams, "", GET_TRANSACTION_HISTORY_VERSION_V1)
-	if err != nil {
-		t.Fatalf("GetTransactionHistoryV1 failed: %v", err)
-	}
+	assertNoError(t, err, "GetTransactionHistory failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "revision_output", response.Revision, "Revision")
 	assertEqual(t, true, response.HasMore, "HasMore")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
@@ -506,13 +423,9 @@ func TestGetTransactionHistoryV2(t *testing.T) {
 	queryParams.Set("revoked", "false")
 
 	response, err := client.GetTransactionHistory("1234", queryParams, "", GET_TRANSACTION_HISTORY_VERSION_V2)
-	if err != nil {
-		t.Fatalf("GetTransactionHistoryV2 failed: %v", err)
-	}
+	assertNoError(t, err, "GetTransactionHistory failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "revision_output", response.Revision, "Revision")
 	assertEqual(t, true, response.HasMore, "HasMore")
 	assertEqual(t, "com.example", response.BundleId, "BundleId")
@@ -532,13 +445,9 @@ func TestGetTransactionInfo(t *testing.T) {
 	)
 
 	response, err := client.GetTransactionInfo("1234")
-	if err != nil {
-		t.Fatalf("GetTransactionInfo failed: %v", err)
-	}
+	assertNoError(t, err, "GetTransactionInfo failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "signed_transaction_info_value", response.SignedTransactionInfo, "SignedTransactionInfo")
 }
 
@@ -556,13 +465,9 @@ func TestGetTransactionHistoryWithUnknownEnvironment(t *testing.T) {
 	)
 
 	response, err := client.GetTransactionHistory("1234", url.Values{"revision": {"revision_input"}}, "", GET_TRANSACTION_HISTORY_VERSION_V2)
-	if err != nil {
-		t.Fatalf("GetTransactionHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetTransactionHistory failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 
 	assertEqual(t, Environment("LocalTestingxxx"), response.Environment, "Environment")
 	assertEqual(t, false, response.Environment.IsValid(), "Environment.IsValid")
@@ -580,19 +485,13 @@ func TestLookUpOrderID(t *testing.T) {
 	)
 
 	response, err := client.LookUpOrderID("M12345")
-	if err != nil {
-		t.Fatalf("LookUpOrderID failed: %v", err)
-	}
+	assertNoError(t, err, "LookUpOrderID failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	if response.Status != 0 {
 		t.Logf("Status: got %v", response.Status)
 	}
-	if len(response.SignedTransactions) != 2 {
-		t.Errorf("Expected 2 signed transactions, got %d", len(response.SignedTransactions))
-	}
+	assertEqual(t, 2, len(response.SignedTransactions), "SignedTransactions length")
 }
 
 // Test RequestTestNotification
@@ -607,13 +506,9 @@ func TestRequestTestNotification(t *testing.T) {
 	)
 
 	response, err := client.RequestTestNotification()
-	if err != nil {
-		t.Fatalf("RequestTestNotification failed: %v", err)
-	}
+	assertNoError(t, err, "RequestTestNotification failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "ce3af791-365e-4c60-841b-1674b43c1609", response.TestNotificationToken, "TestNotificationToken")
 }
 
@@ -646,9 +541,7 @@ func TestSendConsumptionInformation(t *testing.T) {
 	}
 
 	err := client.SendConsumptionInformation("49571273", request)
-	if err != nil {
-		t.Fatalf("SendConsumptionInformation failed: %v", err)
-	}
+	assertNoError(t, err, "SendConsumptionInformation failed")
 }
 
 // Test SetAppAccountToken
@@ -672,9 +565,7 @@ func TestSetAppAccountToken(t *testing.T) {
 	}
 
 	err := client.SetAppAccountToken("1234", request)
-	if err != nil {
-		t.Fatalf("SetAppAccountToken failed: %v", err)
-	}
+	assertNoError(t, err, "SetAppAccountToken failed")
 }
 
 // Test error: HTTP 500
@@ -697,14 +588,10 @@ func TestAPIError_500(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = errorJSON
 
 	_, err := client.GetTransactionInfo("1234")
-	if err == nil {
-		t.Fatal("Expected error for 500 status")
-	}
+	assertError(t, err, "Expected error for 500 status")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 500, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
@@ -720,14 +607,10 @@ func TestAPIError_429_RateLimit(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionInfo("1234")
-	if err == nil {
-		t.Fatal("Expected error for 429 status")
-	}
+	assertError(t, err, "Expected error for 429 status")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 429, apiErr.HTTPStatusCode, "HTTPStatusCode")
 	assertEqual(t, API_ERROR_RATE_LIMIT_EXCEEDED, *apiErr.APIError, "APIError")
 }
@@ -744,14 +627,10 @@ func TestAPIError_InvalidTransactionId(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionInfo("invalid")
-	if err == nil {
-		t.Fatal("Expected error for invalid transaction ID")
-	}
+	assertError(t, err, "Expected error for invalid transaction ID")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
@@ -767,14 +646,10 @@ func TestAPIError_FamilyTransactionNotSupported(t *testing.T) {
 	)
 
 	_, err := client.GetAllSubscriptionStatuses("9987", []Status{})
-	if err == nil {
-		t.Fatal("Expected error for family transaction")
-	}
+	assertError(t, err, "Expected error for family transaction")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
@@ -800,14 +675,10 @@ func TestAPIError_InvalidAppAccountTokenUUID(t *testing.T) {
 	}
 
 	err := client.SendConsumptionInformation("1234", request)
-	if err == nil {
-		t.Fatal("Expected error for invalid UUID")
-	}
+	assertError(t, err, "Expected error for invalid UUID")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
@@ -819,9 +690,7 @@ func TestUploadImage(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.UploadImage("img_123", []byte("fake-image-data"))
-	if err != nil {
-		t.Fatalf("UploadImage failed: %v", err)
-	}
+	assertNoError(t, err, "UploadImage failed")
 }
 
 // Test DeleteImage
@@ -830,9 +699,7 @@ func TestDeleteImage(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteImage("img_123")
-	if err != nil {
-		t.Fatalf("DeleteImage failed: %v", err)
-	}
+	assertNoError(t, err, "DeleteImage failed")
 }
 
 // Test GetImageList
@@ -840,16 +707,10 @@ func TestGetImageList(t *testing.T) {
 	client := createMockAPIClient(t, "getImageListResponse.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/image/list", nil, nil, 200)
 
 	response, err := client.GetImageList()
-	if err != nil {
-		t.Fatalf("GetImageList failed: %v", err)
-	}
+	assertNoError(t, err, "GetImageList failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
-	if len(response.ImageIdentifiers) != 1 {
-		t.Errorf("Expected 1 images, got %d", len(response.ImageIdentifiers))
-	}
+	assertNotNil(t, response, "Response")
+	assertEqual(t, 1, len(response.ImageIdentifiers), "ImageIdentifiers length")
 }
 
 // Test UploadMessage
@@ -866,9 +727,7 @@ func TestUploadMessage(t *testing.T) {
 	}
 
 	err := client.UploadMessage("msg_123", request)
-	if err != nil {
-		t.Fatalf("UploadMessage failed: %v", err)
-	}
+	assertNoError(t, err, "UploadMessage failed")
 }
 
 // Test DeleteMessage
@@ -877,9 +736,7 @@ func TestDeleteMessage(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteMessage("msg_123")
-	if err != nil {
-		t.Fatalf("DeleteMessage failed: %v", err)
-	}
+	assertNoError(t, err, "DeleteMessage failed")
 }
 
 // Test GetMessageList
@@ -887,16 +744,10 @@ func TestGetMessageList(t *testing.T) {
 	client := createMockAPIClient(t, "getMessageListResponse.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/message/list", nil, nil, 200)
 
 	response, err := client.GetMessageList()
-	if err != nil {
-		t.Fatalf("GetMessageList failed: %v", err)
-	}
+	assertNoError(t, err, "GetMessageList failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
-	if len(response.MessageIdentifiers) != 1 {
-		t.Errorf("Expected 1 messages, got %d", len(response.MessageIdentifiers))
-	}
+	assertNotNil(t, response, "Response")
+	assertEqual(t, 1, len(response.MessageIdentifiers), "MessageIdentifiers length")
 }
 
 // Test ConfigureDefaultMessage
@@ -911,9 +762,7 @@ func TestConfigureDefaultMessage(t *testing.T) {
 	}
 
 	err := client.ConfigureDefaultMessage("product_1", "en-US", request)
-	if err != nil {
-		t.Fatalf("ConfigureDefaultMessage failed: %v", err)
-	}
+	assertNoError(t, err, "ConfigureDefaultMessage failed")
 }
 
 // Test DeleteDefaultMessage
@@ -922,9 +771,7 @@ func TestDeleteDefaultMessage(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("")
 
 	err := client.DeleteDefaultMessage("product_1", "en-US")
-	if err != nil {
-		t.Fatalf("DeleteDefaultMessage failed: %v", err)
-	}
+	assertNoError(t, err, "DeleteDefaultMessage failed")
 }
 
 // Test GetAppTransactionInfo
@@ -932,13 +779,9 @@ func TestGetAppTransactionInfo(t *testing.T) {
 	client := createMockAPIClient(t, "appTransactionInfoResponse.json", "GET", "https://local-testing-base-url/inApps/v1/transactions/appTransactions/tx_123", nil, nil, 200)
 
 	response, err := client.GetAppTransactionInfo("tx_123")
-	if err != nil {
-		t.Fatalf("GetAppTransactionInfo failed: %v", err)
-	}
+	assertNoError(t, err, "GetAppTransactionInfo failed")
 
-	if response == nil {
-		t.Fatal("Response should not be nil")
-	}
+	assertNotNil(t, response, "Response")
 	assertEqual(t, "signed_app_transaction_info_value", response.SignedAppTransactionInfo, "SignedAppTransactionInfo")
 }
 
@@ -951,44 +794,32 @@ func TestAPIException_Error(t *testing.T) {
 		ErrorMessage:   "Bad Request",
 	}
 	expected1 := "API error: 4000000 (code: 400, message: Bad Request)"
-	if e1.Error() != expected1 {
-		t.Errorf("Expected %s, got %s", expected1, e1.Error())
-	}
+	assertEqual(t, expected1, e1.Error(), "e1.Error()")
 
 	e2 := &APIException{
 		HTTPStatusCode: 400,
 		ErrorMessage:   "Unknown error",
 	}
 	expected2 := "HTTP error: 400 (message: Unknown error)"
-	if e2.Error() != expected2 {
-		t.Errorf("Expected %s, got %s", expected2, e2.Error())
-	}
+	assertEqual(t, expected2, e2.Error(), "e2.Error()")
 
 	e3 := &APIException{
 		HTTPStatusCode: 500,
 		ErrorMessage:   "Internal Server Error",
 	}
 	expected3 := "HTTP error: 500 (message: Internal Server Error)"
-	if e3.Error() != expected3 {
-		t.Errorf("Expected %s, got %s", expected3, e3.Error())
-	}
+	assertEqual(t, expected3, e3.Error(), "e3.Error()")
 }
 
 // Test NewAPIClient constructor
 func TestNewAPIClient(t *testing.T) {
 	signingKey, err := readTestData("certs/testSigningKey.p8")
-	if err != nil {
-		t.Fatalf("Failed to read signing key: %v", err)
-	}
+	assertNoError(t, err, "Failed to read signing key")
 
 	client, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	if err != nil {
-		t.Fatalf("Failed to create API client: %v", err)
-	}
+	assertNoError(t, err, "Failed to create API client")
 
-	if client == nil {
-		t.Fatal("Client should not be nil")
-	}
+	assertNotNil(t, client, "Client")
 	assertEqual(t, "https://local-testing-base-url", client.baseURL, "baseURL")
 }
 
@@ -1004,14 +835,10 @@ func TestGetAppTransactionInfo_InvalidTransactionId(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("invalid")
-	if err == nil {
-		t.Fatal("Expected error for invalid transaction ID")
-	}
+	assertError(t, err, "Expected error for invalid transaction ID")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
 	assertEqual(t, API_ERROR_INVALID_TRANSACTION_ID, *apiErr.APIError, "APIError")
 }
@@ -1028,14 +855,10 @@ func TestGetAppTransactionInfo_AppTransactionDoesNotExist(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("nonexistent")
-	if err == nil {
-		t.Fatal("Expected error for nonexistent app transaction")
-	}
+	assertError(t, err, "Expected error for nonexistent app transaction")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 404, apiErr.HTTPStatusCode, "HTTPStatusCode")
 	assertEqual(t, API_ERROR_APP_TRANSACTION_DOES_NOT_EXIST_ERROR, *apiErr.APIError, "APIError")
 }
@@ -1052,14 +875,10 @@ func TestGetAppTransactionInfo_TransactionIdNotFound(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("notfound")
-	if err == nil {
-		t.Fatal("Expected error for transaction ID not found")
-	}
+	assertError(t, err, "Expected error for transaction ID not found")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 404, apiErr.HTTPStatusCode, "HTTPStatusCode")
 	assertEqual(t, API_ERROR_TRANSACTION_ID_NOT_FOUND, *apiErr.APIError, "APIError")
 }
@@ -1076,18 +895,12 @@ func TestAPIError_UnknownError(t *testing.T) {
 	)
 
 	_, err := client.GetAppTransactionInfo("1234")
-	if err == nil {
-		t.Fatal("Expected error for unknown API error")
-	}
+	assertError(t, err, "Expected error for unknown API error")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 400, apiErr.HTTPStatusCode, "HTTPStatusCode")
-	if apiErr.APIError == nil {
-		t.Fatal("Expected non-nil APIError for unknown code (casted by Go)")
-	}
+	assertNotNil(t, apiErr.APIError, "APIError for unknown code")
 	assertEqual(t, APIError(9990000), *apiErr.APIError, "APIErrorValue")
 }
 
@@ -1103,17 +916,13 @@ func TestGetTransactionHistory_MalformedAppAppleId(t *testing.T) {
 	)
 
 	_, err := client.GetTransactionHistory("1234", url.Values{}, "", GET_TRANSACTION_HISTORY_VERSION_V1)
-	if err == nil {
-		t.Fatal("Expected error for malformed AppAppleId")
-	}
+	assertError(t, err, "Expected error for malformed AppAppleId")
 }
 
 // Test NewAPIClient: Invalid PEM
 func TestNewAPIClient_InvalidPEM(t *testing.T) {
 	_, err := NewAPIClient([]byte("invalid pem"), "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	if err == nil {
-		t.Fatal("Expected error for invalid PEM")
-	}
+	assertError(t, err, "Expected error for invalid PEM")
 	assertEqual(t, "failed to parse PEM block from signing key", err.Error(), "Error message")
 }
 
@@ -1121,9 +930,7 @@ func TestNewAPIClient_InvalidPEM(t *testing.T) {
 func TestNewAPIClient_RSAKey(t *testing.T) {
 	signingKey, _ := readTestData("certs/rsa_key.pem")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	if err == nil {
-		t.Fatal("Expected error for RSA key")
-	}
+	assertError(t, err, "Expected error for RSA key")
 	assertEqual(t, "key is not an ECDSA private key", err.Error(), "Error message")
 }
 
@@ -1131,30 +938,22 @@ func TestNewAPIClient_RSAKey(t *testing.T) {
 func TestNewAPIClient_NonPKCS8Key(t *testing.T) {
 	signingKey, _ := readTestData("certs/ec_key.pem")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
-	if err == nil {
-		t.Fatal("Expected error for Non-PKCS8 key")
-	}
-	if !strings.Contains(err.Error(), "failed to parse private key") {
-		t.Errorf("Expected parse error, got %v", err)
-	}
+	assertError(t, err, "Expected error for Non-PKCS8 key")
+	assertTrue(t, strings.Contains(err.Error(), "failed to parse private key"), "Error message contains failure")
 }
 
 // Test NewAPIClient: Invalid Environment
 func TestNewAPIClient_InvalidEnvironment(t *testing.T) {
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", Environment("Invalid"))
-	if err == nil {
-		t.Fatal("Expected error for invalid environment")
-	}
+	assertError(t, err, "Expected error for invalid environment")
 }
 
 // Test NewAPIClient: Xcode Environment
 func TestNewAPIClient_XcodeEnvironment(t *testing.T) {
 	signingKey, _ := readTestData("certs/testSigningKey.p8")
 	_, err := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_XCODE)
-	if err == nil {
-		t.Fatal("Expected error for Xcode environment")
-	}
+	assertError(t, err, "Expected error for Xcode environment")
 }
 
 // Test APIClient: HTTP Client Error
@@ -1163,9 +962,7 @@ func TestAPIClient_HTTPClientError(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).err = errors.New("network error")
 
 	_, err := client.GetTransactionInfo("1234")
-	if err == nil {
-		t.Fatal("Expected error for network error")
-	}
+	assertError(t, err, "Expected error for network error")
 	assertEqual(t, "network error", err.Error(), "Error message")
 }
 
@@ -1175,16 +972,10 @@ func TestAPIClient_InvalidJSONErrorResponse(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).responseBody = []byte("invalid json")
 
 	_, err := client.GetTransactionInfo("1234")
-	if err == nil {
-		t.Fatal("Expected error for invalid JSON error response")
-	}
+	assertError(t, err, "Expected error for invalid JSON error response")
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
-	if !strings.Contains(apiErr.ErrorMessage, "failed to decode error response") {
-		t.Errorf("Expected decode failure message, got %s", apiErr.ErrorMessage)
-	}
+	assertTrue(t, ok, "Expected APIException")
+	assertTrue(t, strings.Contains(apiErr.ErrorMessage, "failed to decode error response"), "ErrorMessage contains decode failure")
 }
 
 // Test UploadMessage with image
@@ -1210,9 +1001,7 @@ func TestUploadMessage_WithImage(t *testing.T) {
 	}
 
 	err := client.UploadMessage("msg_123", request)
-	if err != nil {
-		t.Fatalf("UploadMessage failed: %v", err)
-	}
+	assertNoError(t, err, "UploadMessage failed")
 }
 
 // Test UploadImage: Error path
@@ -1222,14 +1011,10 @@ func TestUploadImage_Error(t *testing.T) {
 	client.httpClient.(*MockHTTPClient).expectedContentType = "image/png"
 
 	err := client.UploadImage("img_123", []byte("fake-image-data"))
-	if err == nil {
-		t.Fatal("Expected error for UploadImage")
-	}
+	assertError(t, err, "Expected error for UploadImage")
 
 	apiErr, ok := err.(*APIException)
-	if !ok {
-		t.Fatalf("Expected APIException, got %T", err)
-	}
+	assertTrue(t, ok, "Expected APIException")
 	assertEqual(t, 500, apiErr.HTTPStatusCode, "HTTPStatusCode")
 }
 
@@ -1239,9 +1024,7 @@ func TestMakeRequest_MarshalError(t *testing.T) {
 	client, _ := NewAPIClient(signingKey, "keyId", "issuerId", "com.example", ENVIRONMENT_LOCAL_TESTING)
 	// Passing a channel to json.Marshal will cause an error
 	err := client.makeRequest("POST", "/test", nil, make(chan int), nil)
-	if err == nil {
-		t.Fatal("Expected error for JSON marshal failure")
-	}
+	assertError(t, err, "Expected error for JSON marshal failure")
 }
 
 // Test NewAPIClient: Standard Environments
@@ -1265,7 +1048,7 @@ func TestMakeRequestWithBinaryBody_WithDestination(t *testing.T) {
 	}
 	err := client.makeRequestWithBinaryBody("PUT", "/test", nil, []byte("body"), "text/plain", &response)
 	if err != nil {
-		t.Fatalf("makeRequestWithBinaryBody failed: %v", err)
+		assertNoError(t, err, "makeRequestWithBinaryBody failed")
 	}
 	assertEqual(t, "rev1", response.Revision, "Revision")
 }
@@ -1274,36 +1057,28 @@ func TestMakeRequestWithBinaryBody_WithDestination(t *testing.T) {
 func TestLookUpOrderID_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/lookup/order123", nil, nil, 404)
 	_, err := client.LookUpOrderID("order123")
-	if err == nil {
-		t.Fatal("Expected error for LookUpOrderID")
-	}
+	assertError(t, err, "Expected error for LookUpOrderID")
 }
 
 // Test RequestTestNotification: Error path
 func TestRequestTestNotification_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/test", nil, nil, 500)
 	_, err := client.RequestTestNotification()
-	if err == nil {
-		t.Fatal("Expected error for RequestTestNotification")
-	}
+	assertError(t, err, "Expected error for RequestTestNotification")
 }
 
 // Test GetImageList: Error path
 func TestGetImageList_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/image/list", nil, nil, 500)
 	_, err := client.GetImageList()
-	if err == nil {
-		t.Fatal("Expected error for GetImageList")
-	}
+	assertError(t, err, "Expected error for GetImageList")
 }
 
 // Test GetMessageList: Error path
 func TestGetMessageList_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/messaging/message/list", nil, nil, 500)
 	_, err := client.GetMessageList()
-	if err == nil {
-		t.Fatal("Expected error for GetMessageList")
-	}
+	assertError(t, err, "Expected error for GetMessageList")
 }
 
 // Test ExtendRenewalDateForAllActiveSubscribers: Error path
@@ -1311,9 +1086,7 @@ func TestExtendRenewalDateForAllActiveSubscribers_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", nil, nil, 400)
 	request := MassExtendRenewalDateRequest{}
 	_, err := client.ExtendRenewalDateForAllActiveSubscribers(request)
-	if err == nil {
-		t.Fatal("Expected error for ExtendRenewalDateForAllActiveSubscribers")
-	}
+	assertError(t, err, "Expected error for ExtendRenewalDateForAllActiveSubscribers")
 }
 
 // Test ExtendSubscriptionRenewalDate: Error path
@@ -1321,45 +1094,35 @@ func TestExtendSubscriptionRenewalDate_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "PUT", "https://local-testing-base-url/inApps/v1/subscriptions/extend/tx123", nil, nil, 400)
 	request := ExtendRenewalDateRequest{}
 	_, err := client.ExtendSubscriptionRenewalDate("tx123", request)
-	if err == nil {
-		t.Fatal("Expected error for ExtendSubscriptionRenewalDate")
-	}
+	assertError(t, err, "Expected error for ExtendSubscriptionRenewalDate")
 }
 
 // Test GetStatusOfSubscriptionRenewalDateExtensions: Error path
 func TestGetStatusOfSubscriptionRenewalDateExtensions_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/subscriptions/extend/mass/req123/prod123", nil, nil, 404)
 	_, err := client.GetStatusOfSubscriptionRenewalDateExtensions("req123", "prod123")
-	if err == nil {
-		t.Fatal("Expected error for GetStatusOfSubscriptionRenewalDateExtensions")
-	}
+	assertError(t, err, "Expected error for GetStatusOfSubscriptionRenewalDateExtensions")
 }
 
 // Test GetTestNotificationStatus: Error path
 func TestGetTestNotificationStatus_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v1/notifications/test/token123", nil, nil, 404)
 	_, err := client.GetTestNotificationStatus("token123")
-	if err == nil {
-		t.Fatal("Expected error for GetTestNotificationStatus")
-	}
+	assertError(t, err, "Expected error for GetTestNotificationStatus")
 }
 
 // Test GetTransactionHistory with revision
 func TestGetTransactionHistory_WithRevision(t *testing.T) {
 	client := createMockAPIClient(t, "transactionHistoryResponse.json", "GET", "https://local-testing-base-url/inApps/v1/history/1234", map[string][]string{"revision": {"rev1"}}, nil, 200)
 	_, err := client.GetTransactionHistory("1234", url.Values{}, "rev1", GET_TRANSACTION_HISTORY_VERSION_V1)
-	if err != nil {
-		t.Fatalf("GetTransactionHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetTransactionHistory failed")
 }
 
 // Test GetRefundHistory with revision
 func TestGetRefundHistory_WithRevision(t *testing.T) {
 	client := createMockAPIClient(t, "getRefundHistoryResponse.json", "GET", "https://local-testing-base-url/inApps/v2/refund/lookup/1234", map[string][]string{"revision": {"rev1"}}, nil, 200)
 	_, err := client.GetRefundHistory("1234", "rev1")
-	if err != nil {
-		t.Fatalf("GetRefundHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetRefundHistory failed")
 }
 
 // Test GetNotificationHistory with pagination token
@@ -1367,18 +1130,14 @@ func TestGetNotificationHistory_WithToken(t *testing.T) {
 	client := createMockAPIClient(t, "getNotificationHistoryResponse.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/history", map[string][]string{"paginationToken": {"token1"}}, nil, 200)
 	request := NotificationHistoryRequest{}
 	_, err := client.GetNotificationHistory("token1", request)
-	if err != nil {
-		t.Fatalf("GetNotificationHistory failed: %v", err)
-	}
+	assertNoError(t, err, "GetNotificationHistory failed")
 }
 
 // Test GetRefundHistory: Error path
 func TestGetRefundHistory_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "GET", "https://local-testing-base-url/inApps/v2/refund/lookup/1234", nil, nil, 404)
 	_, err := client.GetRefundHistory("1234", "")
-	if err == nil {
-		t.Fatal("Expected error for GetRefundHistory")
-	}
+	assertError(t, err, "Expected error for GetRefundHistory")
 }
 
 // Test GetNotificationHistory: Error path
@@ -1386,9 +1145,7 @@ func TestGetNotificationHistory_Error(t *testing.T) {
 	client := createMockAPIClient(t, "apiException.json", "POST", "https://local-testing-base-url/inApps/v1/notifications/history", nil, nil, 500)
 	request := NotificationHistoryRequest{}
 	_, err := client.GetNotificationHistory("", request)
-	if err == nil {
-		t.Fatal("Expected error for GetNotificationHistory")
-	}
+	assertError(t, err, "Expected error for GetNotificationHistory")
 }
 
 // Helper functions

@@ -6,54 +6,36 @@ import (
 
 func TestExtractTransactionIdFromAppReceipt_Empty(t *testing.T) {
 	receipt, err := readTestDataString("xcode/xcode-app-receipt-empty")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromAppReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to extract transaction ID: %v", err)
-	}
+	assertNoError(t, err, "Failed to extract transaction ID")
 
-	if transactionId != nil {
-		t.Errorf("Expected nil transaction ID for empty receipt, got %s", *transactionId)
-	}
+	assertNil(t, transactionId, "TransactionId")
 }
 
 func TestExtractTransactionIdFromAppReceipt_WithTransaction(t *testing.T) {
 	receipt, err := readTestDataString("xcode/xcode-app-receipt-with-transaction")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromAppReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to extract transaction ID: %v", err)
-	}
+	assertNoError(t, err, "Failed to extract transaction ID")
 
-	if transactionId == nil {
-		t.Fatal("Expected transaction ID, got nil")
-	}
+	assertNotNil(t, transactionId, "TransactionId")
 	assertEqual(t, "0", *transactionId, "TransactionId")
 }
 
 func TestExtractTransactionIdFromTransactionReceipt(t *testing.T) {
 	receipt, err := readTestDataString("mock_signed_data/legacyTransaction")
-	if err != nil {
-		t.Fatalf("Failed to read test data: %v", err)
-	}
+	assertNoError(t, err, "Failed to read test data")
 
 	utility := NewReceiptUtility()
 	transactionId, err := utility.ExtractTransactionIdFromTransactionReceipt(receipt)
-	if err != nil {
-		t.Fatalf("Failed to extract transaction ID: %v", err)
-	}
+	assertNoError(t, err, "Failed to extract transaction ID")
 
-	if transactionId == nil {
-		t.Fatal("Expected transaction ID, got nil")
-	}
+	assertNotNil(t, transactionId, "TransactionId")
 	assertEqual(t, "33993399", *transactionId, "TransactionId")
 }
 
@@ -73,14 +55,10 @@ func TestEncodeLength(t *testing.T) {
 
 	for _, test := range tests {
 		result := encodeLength(test.length)
-		if len(result) != len(test.expected) {
-			t.Errorf("For length %d, expected result length %d, got %d", test.length, len(test.expected), len(result))
-			continue
-		}
+		assertEqual(t, len(test.expected), len(result), "Encoded length size")
 		for i, b := range result {
-			if b != test.expected[i] {
-				t.Errorf("For length %d, at index %d expected byte %x, got %x", test.length, i, test.expected[i], b)
-				break
+			if i < len(test.expected) {
+				assertEqual(t, test.expected[i], b, "Encoded length byte")
 			}
 		}
 	}

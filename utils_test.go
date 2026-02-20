@@ -123,6 +123,30 @@ func assertEqual(t *testing.T, expected, actual any, fieldName string) {
 	}
 }
 
+// assertNoError is a helper function to assert that an error is nil
+func assertNoError(t *testing.T, err error, message string) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("%s: unexpected error: %v", message, err)
+	}
+}
+
+// assertError is a helper function to assert that an error is not nil
+func assertError(t *testing.T, err error, message string) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("%s: expected error, got nil", message)
+	}
+}
+
+// assertTrue is a helper function to assert that a value is true
+func assertTrue(t *testing.T, actual bool, fieldName string) {
+	t.Helper()
+	if !actual {
+		t.Errorf("%s: expected true, got false", fieldName)
+	}
+}
+
 // assertNil is a helper function to assert that a value is nil
 func assertNil(t *testing.T, actual any, fieldName string) {
 	t.Helper()
