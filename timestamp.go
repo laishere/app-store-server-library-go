@@ -16,6 +16,15 @@ func (t Timestamp) Time() time.Time {
 	return time.UnixMilli(int64(t))
 }
 
+// TimePtr returns the time.Time representation of the timestamp as a pointer.
+func (t *Timestamp) TimePtr() *time.Time {
+	if t == nil {
+		return nil
+	}
+	t2 := t.Time()
+	return &t2
+}
+
 // UnixMilli returns the timestamp in milliseconds.
 func (t Timestamp) UnixMilli() int64 {
 	return int64(t)

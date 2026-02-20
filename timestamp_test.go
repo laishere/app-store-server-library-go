@@ -91,6 +91,15 @@ func TestTimestamp_Time(t *testing.T) {
 	assertEqual(t, true, zeroTs.Time().IsZero(), "Timestamp.Time() for zero")
 }
 
+func TestTimestamp_TimePtr(t *testing.T) {
+	ts := Timestamp(1698148900000)
+	want := time.UnixMilli(1698148900000)
+	assertEqual(t, want, *ts.TimePtr(), "Timestamp.TimePtr()")
+
+	nilTs := (*Timestamp)(nil)
+	assertNil(t, nilTs.TimePtr(), "Timestamp.TimePtr() for nil")
+}
+
 func TestTimestamp_UnixMilli(t *testing.T) {
 	ts := Timestamp(1698148900000)
 	assertEqual(t, int64(1698148900000), ts.UnixMilli(), "Timestamp.UnixMilli()")
