@@ -1,6 +1,6 @@
 module github.com/laishere/app-store-server-library-go
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -9,7 +9,7 @@ require (
 
 require (
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.48.0
+	golang.org/x/crypto v0.49.0
 )
 
 require (
